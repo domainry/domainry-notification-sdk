@@ -109,6 +109,11 @@ type NotificationEvent struct {
 	FencingToken         int64                                `json:"fencing_token"`
 	CreatedAt            string                               `json:"created_at"`
 	UpdatedAt            string                               `json:"updated_at"`
+	// PublicationIntent carries the source-owned producer envelope only while
+	// a host commits a prepared publication. Module mode persists the compiled
+	// event; SaaS mode persists this intent in the source transaction outbox.
+	// It is deliberately excluded from every wire and persistence encoding.
+	PublicationIntent *NotificationIntent `json:"-"`
 }
 
 // NotificationEventFailure is append-only, non-sensitive processing evidence.
