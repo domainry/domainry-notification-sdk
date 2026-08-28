@@ -60,7 +60,13 @@ type AudienceResolver interface {
 
 type DeliveryRequest struct {
 	WorkspaceID, PlanID, EventID, Channel, ConnectorKey, ConnectionKey, Operation, DedupeKey string
+	DeliverAfter, CreatedAt                                                                  string
 	Rendered                                                                                 contract.RenderedNotification
+	Fallbacks                                                                                []DeliveryFallback
+}
+type DeliveryFallback struct {
+	ConnectorKey, ConnectionKey, Operation string
+	Rendered                               contract.RenderedNotification
 }
 type DeliveryReceipt struct{ MessageID string }
 type DeliveryGateway interface {
