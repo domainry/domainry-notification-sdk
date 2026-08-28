@@ -49,7 +49,7 @@ type ServiceToken struct {
 }
 
 type ServiceTokenSource interface {
-	Token(context.Context, identitysdk.ApplicationRef) (ServiceToken, error)
+	Token(context.Context, identitysdk.ApplicationRef, identitysdk.ApplicationServiceGrant) (ServiceToken, error)
 }
 
 // OpenTelemetryContextHeaders propagates the active W3C trace/baggage context

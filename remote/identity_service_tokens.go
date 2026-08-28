@@ -13,7 +13,7 @@ func NewIdentityServiceTokenSource(factory identitysdk.Factory) ServiceTokenSour
 	return &identityServiceTokenSource{factory: factory}
 }
 
-func (source *identityServiceTokenSource) Token(ctx context.Context, application identitysdk.ApplicationRef) (ServiceToken, error) {
+func (source *identityServiceTokenSource) Token(ctx context.Context, application identitysdk.ApplicationRef, grant identitysdk.ApplicationServiceGrant) (ServiceToken, error) {
 	if source == nil || source.factory == nil {
 		return ServiceToken{}, remoteError(http.StatusInternalServerError, "notification.identity_service_token_source_unavailable", false, nil)
 	}
@@ -28,7 +28,7 @@ func (source *identityServiceTokenSource) Token(ctx context.Context, application
 	}
 	token, err := serviceBinding.ApplicationServices().Exchange(ctx, identitysdk.ExchangeApplicationServiceTokenRequest{
 		Audience: "domainry-notification",
-		Grants:   []identitysdk.ApplicationServiceGrant{{Resource: "notification_event", Action: "publish"}},
+		Grants:   []identitysdk.ApplicationServiceGrant{grant},
 	})
 	if err != nil {
 		return ServiceToken{}, remoteError(http.StatusServiceUnavailable, "notification.identity_service_token_exchange_failed", true, err)

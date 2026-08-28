@@ -18,10 +18,14 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-type recordingServiceTokenSource struct{ calls int }
+type recordingServiceTokenSource struct {
+	calls  int
+	grants []identitysdk.ApplicationServiceGrant
+}
 
-func (source *recordingServiceTokenSource) Token(_ context.Context, application identitysdk.ApplicationRef) (remote.ServiceToken, error) {
+func (source *recordingServiceTokenSource) Token(_ context.Context, application identitysdk.ApplicationRef, grant identitysdk.ApplicationServiceGrant) (remote.ServiceToken, error) {
 	source.calls++
+	source.grants = append(source.grants, grant)
 	if application.TenantID != "tenant" || application.WorkspaceID != "workspace" || application.ApplicationKey != "runtime" {
 		return remote.ServiceToken{}, &notificationsdk.Error{Code: "test.application_scope_mismatch"}
 	}
@@ -96,8 +100,8 @@ func TestFactoryExchangesAndCachesIdentityServiceToken(t *testing.T) {
 	if _, _, err := binding.Publisher().PublishIntent(t.Context(), intent); err != nil {
 		t.Fatal(err)
 	}
-	if source.calls != 1 {
-		t.Fatalf("token exchange calls=%d", source.calls)
+	if source.calls != 2 || source.grants[0].Resource != "notification_service" || source.grants[1].Resource != "notification_event" {
+		t.Fatalf("token exchange calls=%d grants=%+v", source.calls, source.grants)
 	}
 }
 

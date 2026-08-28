@@ -33,7 +33,7 @@ func (f *Factory) Open(ctx context.Context, application notificationsdk.Applicat
 	if err != nil || parsed.Scheme == "" || parsed.Host == "" {
 		return nil, remoteError(http.StatusInternalServerError, "notification.remote_url_invalid", false, err)
 	}
-	b := &binding{baseURL: baseURL, serviceCredential: config.ServiceCredential, serviceTokens: config.ServiceTokens, application: application, client: config.HTTPClient, requestTimeout: config.RequestTimeout, retry: config.Retry, contextHeaders: config.ContextHeaders, breaker: &circuitBreaker{policy: config.CircuitBreaker}}
+	b := &binding{baseURL: baseURL, serviceCredential: config.ServiceCredential, serviceTokens: config.ServiceTokens, cachedTokens: map[string]ServiceToken{}, application: application, client: config.HTTPClient, requestTimeout: config.RequestTimeout, retry: config.Retry, contextHeaders: config.ContextHeaders, breaker: &circuitBreaker{policy: config.CircuitBreaker}}
 	var descriptor notificationsdk.Descriptor
 	if err := b.call(ctx, http.MethodGet, "/v1/descriptor", notificationsdk.UserAuthority{}, nil, &descriptor); err != nil {
 		return nil, fmt.Errorf("discover Notification SaaS: %w", err)
@@ -55,7 +55,7 @@ type binding struct {
 	baseURL, serviceCredential string
 	serviceTokens              ServiceTokenSource
 	tokenMu                    sync.Mutex
-	cachedToken                ServiceToken
+	cachedTokens               map[string]ServiceToken
 	application                notificationsdk.ApplicationRef
 	descriptor                 notificationsdk.Descriptor
 	client                     *http.Client
@@ -134,7 +134,11 @@ func (b *binding) perform(parent context.Context, method, path string, authority
 	}
 	request.Header.Set("Accept", "application/json")
 	request.Header.Set("Content-Type", "application/json")
-	serviceToken, err := b.serviceToken(parent)
+	grant, err := notificationsdk.ServiceGrantForRequest(method, path)
+	if err != nil {
+		return 0, err
+	}
+	serviceToken, err := b.serviceToken(parent, grant)
 	if err != nil {
 		return 0, err
 	}
@@ -173,23 +177,25 @@ func (b *binding) perform(parent context.Context, method, path string, authority
 	return response.StatusCode, nil
 }
 
-func (b *binding) serviceToken(ctx context.Context) (string, error) {
+func (b *binding) serviceToken(ctx context.Context, grant identitysdk.ApplicationServiceGrant) (string, error) {
 	if b.serviceTokens == nil {
 		return strings.TrimSpace(b.serviceCredential), nil
 	}
 	b.tokenMu.Lock()
 	defer b.tokenMu.Unlock()
-	if strings.TrimSpace(b.cachedToken.AccessToken) != "" && b.cachedToken.ExpiresAt.After(time.Now().UTC().Add(30*time.Second)) {
-		return b.cachedToken.AccessToken, nil
+	key := string(grant.Resource) + "\x00" + string(grant.Action)
+	cached := b.cachedTokens[key]
+	if strings.TrimSpace(cached.AccessToken) != "" && cached.ExpiresAt.After(time.Now().UTC().Add(30*time.Second)) {
+		return cached.AccessToken, nil
 	}
-	token, err := b.serviceTokens.Token(ctx, identitysdk.ApplicationRef{TenantID: identitysdk.TenantID(b.application.TenantID), WorkspaceID: identitysdk.WorkspaceID(b.application.WorkspaceID), ApplicationKey: identitysdk.ApplicationKey(b.application.ApplicationKey)})
+	token, err := b.serviceTokens.Token(ctx, identitysdk.ApplicationRef{TenantID: identitysdk.TenantID(b.application.TenantID), WorkspaceID: identitysdk.WorkspaceID(b.application.WorkspaceID), ApplicationKey: identitysdk.ApplicationKey(b.application.ApplicationKey)}, grant)
 	if err != nil {
 		return "", err
 	}
 	if strings.TrimSpace(token.AccessToken) == "" || !token.ExpiresAt.After(time.Now().UTC()) {
 		return "", remoteError(http.StatusBadGateway, "notification.identity_service_token_invalid", false, nil)
 	}
-	b.cachedToken = token
+	b.cachedTokens[key] = token
 	return token.AccessToken, nil
 }
 
