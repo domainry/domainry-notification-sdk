@@ -193,6 +193,15 @@ type templateRequest struct {
 	Reason     string                         `json:"reason,omitempty"`
 }
 
+func (s templates) Capabilities(ctx context.Context, a notificationsdk.UserAuthority) ([]contract.NotificationTemplateCapability, error) {
+	var out []contract.NotificationTemplateCapability
+	if err := validateUser(a); err != nil {
+		return nil, err
+	}
+	err := s.binding.call(ctx, http.MethodPost, "/v1/templates/capabilities:list", a, nil, &out)
+	return out, err
+}
+
 func (s templates) List(ctx context.Context, a notificationsdk.UserAuthority) ([]contract.NotificationTemplateRecord, error) {
 	var out []contract.NotificationTemplateRecord
 	if err := validateUser(a); err != nil {
@@ -307,6 +316,14 @@ func (s delivery) ListRecipientPreferences(ctx context.Context, a notificationsd
 		return nil, err
 	}
 	err := s.binding.call(ctx, http.MethodPost, "/v1/recipient-preferences:list", a, nil, &out)
+	return out, err
+}
+func (s delivery) SaveRecipientPreference(ctx context.Context, a notificationsdk.UserAuthority, v contract.NotificationRecipientPreference) (contract.NotificationRecipientPreference, error) {
+	var out contract.NotificationRecipientPreference
+	if err := validateUser(a); err != nil {
+		return out, err
+	}
+	err := s.binding.call(ctx, http.MethodPost, "/v1/recipient-preferences:save", a, inboxQueryRequest{Preference: &v}, &out)
 	return out, err
 }
 func (s delivery) Metrics(ctx context.Context, a notificationsdk.UserAuthority, since string) (contract.NotificationDeliveryMetrics, error) {

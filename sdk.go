@@ -159,6 +159,7 @@ type Inbox interface {
 }
 
 type Templates interface {
+	Capabilities(context.Context, UserAuthority) ([]contract.NotificationTemplateCapability, error)
 	List(context.Context, UserAuthority) ([]contract.NotificationTemplateRecord, error)
 	Get(context.Context, UserAuthority, string) (contract.NotificationTemplateRecord, bool, error)
 	ListVersions(context.Context, UserAuthority, string) ([]contract.NotificationTemplateVersion, error)
@@ -178,6 +179,7 @@ type Delivery interface {
 	GetPolicy(context.Context, UserAuthority) (contract.NotificationDeliveryPolicy, error)
 	SavePolicy(context.Context, UserAuthority, contract.NotificationDeliveryPolicy) (contract.NotificationDeliveryPolicy, error)
 	ListRecipientPreferences(context.Context, UserAuthority) ([]contract.NotificationRecipientPreference, error)
+	SaveRecipientPreference(context.Context, UserAuthority, contract.NotificationRecipientPreference) (contract.NotificationRecipientPreference, error)
 	Metrics(context.Context, UserAuthority, string) (contract.NotificationDeliveryMetrics, error)
 }
 
