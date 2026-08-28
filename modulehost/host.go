@@ -26,6 +26,27 @@ type Database interface {
 	BeginTx(context.Context, *sql.TxOptions) (*sql.Tx, error)
 }
 
+// SchemaMigration is source-owned DDL applied by the project host through its
+// existing migration lock and ledger. BaselineTables allow an installation
+// created before module extraction to record the immutable migration without
+// re-executing CREATE statements over already-owned tables.
+type SchemaMigration struct {
+	Version        uint
+	Name           string
+	Statements     []string
+	BaselineTables []string
+}
+
+type MigrationRegistrar interface {
+	Driver() string
+	Schema() string
+	ApplyOwnedMigrations(context.Context, string, []SchemaMigration) error
+}
+
+type MigrationHost interface {
+	Migrations() MigrationRegistrar
+}
+
 type Dialect interface {
 	Identifier(string) string
 	Table(string) string
