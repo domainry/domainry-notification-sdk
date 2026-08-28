@@ -160,6 +160,7 @@ func TestRemoteSystemTemplatesUseOnlyServiceAuthority(t *testing.T) {
 func portableBundle() contract.NotificationPortableBundle {
 	return contract.NotificationPortableBundle{
 		FormatVersion: contract.NotificationPortableFormatV1,
+		MigrationID:   "migration",
 		Source:        contract.NotificationPortableScope{TenantID: "tenant", WorkspaceID: "workspace", ApplicationKey: "runtime"},
 		Tables:        []contract.NotificationPortableTable{{Name: "notification_events", Columns: []string{"id"}, Rows: [][]json.RawMessage{{json.RawMessage(`"event"`)}}}},
 		Fingerprint:   "fingerprint",

@@ -30,13 +30,14 @@ type NotificationPortableTable struct {
 
 type NotificationPortableBundle struct {
 	FormatVersion string                      `json:"format_version"`
+	MigrationID   string                      `json:"migration_id,omitempty"`
 	Source        NotificationPortableScope   `json:"source"`
 	Tables        []NotificationPortableTable `json:"tables"`
 	Fingerprint   string                      `json:"fingerprint"`
 }
 
 func (b NotificationPortableBundle) ValidateEnvelope() error {
-	if b.FormatVersion != NotificationPortableFormatV1 || b.Source.Validate() != nil || strings.TrimSpace(b.Fingerprint) == "" || len(b.Tables) == 0 {
+	if b.FormatVersion != NotificationPortableFormatV1 || b.Source.Validate() != nil || strings.TrimSpace(b.MigrationID) == "" || strings.TrimSpace(b.Fingerprint) == "" || len(b.Tables) == 0 {
 		return fmt.Errorf("notification portable bundle envelope is invalid")
 	}
 	return nil
