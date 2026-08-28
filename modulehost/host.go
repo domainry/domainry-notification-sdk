@@ -26,15 +26,43 @@ type Database interface {
 	BeginTx(context.Context, *sql.TxOptions) (*sql.Tx, error)
 }
 
+// SchemaBaseline is the exact source-owned physical shape that a host must
+// prove before adopting a schema created before module extraction. Indexes are
+// the source-declared indexes; database-generated primary-key indexes are not
+// part of this inventory.
+type SchemaBaseline struct {
+	Tables []SchemaTable
+}
+
+type SchemaTable struct {
+	Name    string
+	Columns []SchemaColumn
+	Indexes []SchemaIndex
+}
+
+type SchemaColumn struct {
+	Name       string
+	Type       string
+	Nullable   bool
+	PrimaryKey bool
+}
+
+type SchemaIndex struct {
+	Name    string
+	Unique  bool
+	Columns []string
+}
+
 // SchemaMigration is source-owned DDL applied by the project host through its
-// existing migration lock and ledger. BaselineTables allow an installation
-// created before module extraction to record the immutable migration without
-// re-executing CREATE statements over already-owned tables.
+// existing migration lock and ledger. Baseline allows an installation created
+// before module extraction to record the immutable migration only after the
+// host proves every declared table, column, physical type, nullability,
+// primary key and explicit index.
 type SchemaMigration struct {
-	Version        uint
-	Name           string
-	Statements     []string
-	BaselineTables []string
+	Version    uint
+	Name       string
+	Statements []string
+	Baseline   *SchemaBaseline
 }
 
 type MigrationRegistrar interface {
