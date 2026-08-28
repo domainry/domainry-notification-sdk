@@ -2,6 +2,8 @@ module github.com/domainry/domainry-notification-sdk
 
 go 1.26.0
 
+toolchain go1.26.6
+
 require (
 	github.com/domainry/domainry-identity-sdk v0.1.0-dev3
 	go.opentelemetry.io/otel v1.44.0
