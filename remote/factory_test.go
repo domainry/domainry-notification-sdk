@@ -1,6 +1,7 @@
 package remote_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"net/http"
@@ -56,6 +57,8 @@ func TestRemoteSystemTemplatesUseOnlyServiceAuthority(t *testing.T) {
 			response.WriteHeader(http.StatusNoContent)
 		case "/v1/system/templates:list-published":
 			_ = json.NewEncoder(response).Encode([]contract.NotificationTemplateRecord{{Key: "welcome"}})
+		case "/v1/system/subjects:preview", "/v1/system/subjects:export", "/v1/system/subjects:erase":
+			_ = json.NewEncoder(response).Encode(map[string]any{"subject": "user"})
 		default:
 			http.NotFound(response, request)
 		}
@@ -75,6 +78,26 @@ func TestRemoteSystemTemplatesUseOnlyServiceAuthority(t *testing.T) {
 	records, err := system.SystemTemplates().ListPublished(t.Context())
 	if err != nil || len(records) != 1 || records[0].Key != "welcome" {
 		t.Fatalf("records=%+v err=%v", records, err)
+	}
+	subjects, ok := binding.(notificationsdk.SystemSubjectBinding)
+	if !ok || subjects.SystemSubjects() == nil {
+		t.Fatal("Remote Binding did not expose system subjects")
+	}
+	for _, call := range []func() (json.RawMessage, error){
+		func() (json.RawMessage, error) {
+			return subjects.SystemSubjects().PreviewSubject(t.Context(), "workspace", "user")
+		},
+		func() (json.RawMessage, error) {
+			return subjects.SystemSubjects().ExportSubject(t.Context(), "workspace", "user")
+		},
+		func() (json.RawMessage, error) {
+			return subjects.SystemSubjects().EraseSubject(t.Context(), "workspace", "user", json.RawMessage(`[]`))
+		},
+	} {
+		value, callErr := call()
+		if callErr != nil || !bytes.Contains(value, []byte(`"subject":"user"`)) {
+			t.Fatalf("subject value=%s err=%v", value, callErr)
+		}
 	}
 }
 

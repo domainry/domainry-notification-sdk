@@ -3,6 +3,7 @@ package notificationsdk
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -112,6 +113,16 @@ type SystemTemplates interface {
 
 type SystemTemplateBinding interface {
 	SystemTemplates() SystemTemplates
+}
+
+type SystemSubjects interface {
+	PreviewSubject(context.Context, string, string) (json.RawMessage, error)
+	ExportSubject(context.Context, string, string) (json.RawMessage, error)
+	EraseSubject(context.Context, string, string, json.RawMessage) (json.RawMessage, error)
+}
+
+type SystemSubjectBinding interface {
+	SystemSubjects() SystemSubjects
 }
 
 type WorkLocator struct {

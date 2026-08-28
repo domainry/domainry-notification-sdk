@@ -2,6 +2,7 @@ package remote
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 
 	notificationsdk "github.com/domainry/domainry-notification-sdk"
@@ -14,6 +15,7 @@ type templates struct{ binding *binding }
 type delivery struct{ binding *binding }
 type administration struct{ binding *binding }
 type systemTemplates struct{ binding *binding }
+type systemSubjects struct{ binding *binding }
 
 type systemTemplateRequest struct {
 	Templates []contract.NotificationTemplate `json:"templates,omitempty"`
@@ -27,6 +29,27 @@ func (s systemTemplates) ListPublished(ctx context.Context) ([]contract.Notifica
 	var out []contract.NotificationTemplateRecord
 	err := s.binding.call(ctx, http.MethodPost, "/v1/system/templates:list-published", notificationsdk.UserAuthority{}, nil, &out)
 	return out, err
+}
+
+type systemSubjectRequest struct {
+	WorkspaceID string          `json:"workspace_id"`
+	SubjectID   string          `json:"subject_id"`
+	LegalHolds  json.RawMessage `json:"legal_holds,omitempty"`
+}
+
+func (s systemSubjects) call(ctx context.Context, path, workspaceID, subjectID string, holds json.RawMessage) (json.RawMessage, error) {
+	var out json.RawMessage
+	err := s.binding.call(ctx, http.MethodPost, path, notificationsdk.UserAuthority{}, systemSubjectRequest{WorkspaceID: workspaceID, SubjectID: subjectID, LegalHolds: holds}, &out)
+	return out, err
+}
+func (s systemSubjects) PreviewSubject(ctx context.Context, workspaceID, subjectID string) (json.RawMessage, error) {
+	return s.call(ctx, "/v1/system/subjects:preview", workspaceID, subjectID, nil)
+}
+func (s systemSubjects) ExportSubject(ctx context.Context, workspaceID, subjectID string) (json.RawMessage, error) {
+	return s.call(ctx, "/v1/system/subjects:export", workspaceID, subjectID, nil)
+}
+func (s systemSubjects) EraseSubject(ctx context.Context, workspaceID, subjectID string, holds json.RawMessage) (json.RawMessage, error) {
+	return s.call(ctx, "/v1/system/subjects:erase", workspaceID, subjectID, holds)
 }
 
 type publishResponse struct {
