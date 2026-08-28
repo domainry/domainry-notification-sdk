@@ -37,6 +37,9 @@ func TestInboxQueryRejectsCallerSuppliedInvalidScopeAndUnboundedPage(t *testing.
 	if err := (contract.NotificationInboxQuery{Scope: contract.NotificationInboxScopeTeam, TeamMemberID: "user", Limit: 100}).Validate(); err != nil {
 		t.Fatalf("validate query: %v", err)
 	}
+	if err := (contract.NotificationInboxQuery{Scope: contract.NotificationInboxScopeDelegated, TeamMemberID: "owner", Limit: 100}).Validate(); err != nil {
+		t.Fatalf("validate delegated query: %v", err)
+	}
 	if !errors.Is((contract.NotificationInboxQuery{Scope: contract.NotificationInboxScopeMine, TeamMemberID: "user"}).Validate(), contract.ErrInboxQueryScopeInvalid) {
 		t.Fatal("expected team member outside team scope to fail")
 	}

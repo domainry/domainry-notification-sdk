@@ -57,7 +57,7 @@ func (value NotificationInboxQuery) Validate() error {
 	default:
 		return ErrInboxQueryScopeInvalid
 	}
-	if value.TeamMemberID != "" && value.Scope != NotificationInboxScopeTeam {
+	if value.TeamMemberID != "" && value.Scope != NotificationInboxScopeTeam && value.Scope != NotificationInboxScopeDelegated {
 		return ErrInboxQueryScopeInvalid
 	}
 	switch strings.TrimSpace(value.Mailbox) {
