@@ -17,6 +17,7 @@ type administration struct{ binding *binding }
 type systemTemplates struct{ binding *binding }
 type systemSubjects struct{ binding *binding }
 type systemRetention struct{ binding *binding }
+type systemMigration struct{ binding *binding }
 
 type systemTemplateRequest struct {
 	Templates []contract.NotificationTemplate `json:"templates,omitempty"`
@@ -68,6 +69,21 @@ func (s systemRetention) ProcessBatch(ctx context.Context, request contract.Noti
 		return out, err
 	}
 	err := s.binding.call(ctx, http.MethodPost, "/v1/system/retention:process-batch", notificationsdk.UserAuthority{}, request, &out)
+	return out, err
+}
+
+func (s systemMigration) Export(ctx context.Context) (contract.NotificationPortableExport, error) {
+	var out contract.NotificationPortableExport
+	err := s.binding.call(ctx, http.MethodPost, "/v1/system/migration:export", notificationsdk.UserAuthority{}, nil, &out)
+	return out, err
+}
+
+func (s systemMigration) Import(ctx context.Context, bundle contract.NotificationPortableBundle) (contract.NotificationPortableImportReceipt, error) {
+	var out contract.NotificationPortableImportReceipt
+	if err := bundle.ValidateEnvelope(); err != nil {
+		return out, err
+	}
+	err := s.binding.call(ctx, http.MethodPost, "/v1/system/migration:import", notificationsdk.UserAuthority{}, bundle, &out)
 	return out, err
 }
 

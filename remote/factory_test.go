@@ -63,6 +63,10 @@ func TestRemoteSystemTemplatesUseOnlyServiceAuthority(t *testing.T) {
 			_ = json.NewEncoder(response).Encode(contract.NotificationRetentionPreview{Rows: 3})
 		case "/v1/system/retention:process-batch":
 			_ = json.NewEncoder(response).Encode(contract.NotificationRetentionBatchResult{Scanned: 2, Purged: 1, Done: true})
+		case "/v1/system/migration:export":
+			_ = json.NewEncoder(response).Encode(contract.NotificationPortableExport{Bundle: portableBundle(), Inventory: contract.NotificationPortableInventory{Rows: 1, Fingerprint: "fingerprint"}})
+		case "/v1/system/migration:import":
+			_ = json.NewEncoder(response).Encode(contract.NotificationPortableImportReceipt{FormatVersion: contract.NotificationPortableFormatV1, Fingerprint: "fingerprint", Rows: 1})
 		default:
 			http.NotFound(response, request)
 		}
@@ -116,6 +120,27 @@ func TestRemoteSystemTemplatesUseOnlyServiceAuthority(t *testing.T) {
 	batch, err := retentionBinding.SystemRetention().ProcessBatch(t.Context(), contract.NotificationRetentionBatchRequest{JobID: "job", WorkspaceID: "workspace", Operation: "purge", Policy: policy, Now: now, Limit: 10})
 	if err != nil || batch.Purged != 1 || !batch.Done {
 		t.Fatalf("retention batch=%+v err=%v", batch, err)
+	}
+	migrationBinding, ok := binding.(notificationsdk.SystemMigrationBinding)
+	if !ok || migrationBinding.SystemMigration() == nil {
+		t.Fatal("Remote Binding did not expose system migration")
+	}
+	exported, err := migrationBinding.SystemMigration().Export(t.Context())
+	if err != nil || exported.Bundle.Fingerprint != "fingerprint" || exported.Inventory.Rows != 1 {
+		t.Fatalf("migration export=%+v err=%v", exported, err)
+	}
+	receipt, err := migrationBinding.SystemMigration().Import(t.Context(), exported.Bundle)
+	if err != nil || receipt.Fingerprint != exported.Bundle.Fingerprint || receipt.Rows != 1 {
+		t.Fatalf("migration receipt=%+v err=%v", receipt, err)
+	}
+}
+
+func portableBundle() contract.NotificationPortableBundle {
+	return contract.NotificationPortableBundle{
+		FormatVersion: contract.NotificationPortableFormatV1,
+		Source:        contract.NotificationPortableScope{TenantID: "tenant", WorkspaceID: "workspace", ApplicationKey: "runtime"},
+		Tables:        []contract.NotificationPortableTable{{Name: "notification_events", Columns: []string{"id"}, Rows: [][]json.RawMessage{{json.RawMessage(`"event"`)}}}},
+		Fingerprint:   "fingerprint",
 	}
 }
 

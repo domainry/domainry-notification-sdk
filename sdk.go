@@ -134,6 +134,18 @@ type SystemRetentionBinding interface {
 	SystemRetention() SystemRetention
 }
 
+// SystemMigration is a service-authenticated, application-scoped portable
+// state boundary. Export includes a deterministic inventory and fingerprint;
+// Import must be idempotent and reject any non-matching existing state.
+type SystemMigration interface {
+	Export(context.Context) (contract.NotificationPortableExport, error)
+	Import(context.Context, contract.NotificationPortableBundle) (contract.NotificationPortableImportReceipt, error)
+}
+
+type SystemMigrationBinding interface {
+	SystemMigration() SystemMigration
+}
+
 type WorkLocator struct {
 	Kind        string `json:"kind"`
 	WorkspaceID string `json:"workspace_id,omitempty"`

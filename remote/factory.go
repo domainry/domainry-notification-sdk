@@ -73,6 +73,9 @@ func (b *binding) SystemSubjects() notificationsdk.SystemSubjects { return syste
 func (b *binding) SystemRetention() notificationsdk.SystemRetention {
 	return systemRetention{binding: b}
 }
+func (b *binding) SystemMigration() notificationsdk.SystemMigration {
+	return systemMigration{binding: b}
+}
 func (b *binding) LocalWorkers() (notificationsdk.LocalWorkers, bool) { return nil, false }
 func (b *binding) Close(context.Context) error                        { return nil }
 
