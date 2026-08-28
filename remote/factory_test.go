@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	identitysdk "github.com/domainry/domainry-identity-sdk"
 	notificationsdk "github.com/domainry/domainry-notification-sdk"
 	"github.com/domainry/domainry-notification-sdk/contract"
 	"github.com/domainry/domainry-notification-sdk/remote"
@@ -16,6 +17,16 @@ import (
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 )
+
+type recordingServiceTokenSource struct{ calls int }
+
+func (source *recordingServiceTokenSource) Token(_ context.Context, application identitysdk.ApplicationRef) (remote.ServiceToken, error) {
+	source.calls++
+	if application.TenantID != "tenant" || application.WorkspaceID != "workspace" || application.ApplicationKey != "runtime" {
+		return remote.ServiceToken{}, &notificationsdk.Error{Code: "test.application_scope_mismatch"}
+	}
+	return remote.ServiceToken{AccessToken: "short-lived-service-token", ExpiresAt: time.Now().Add(time.Minute)}, nil
+}
 
 func TestDefaultRemoteConfigurationPropagatesActiveW3CTrace(t *testing.T) {
 	previous := otel.GetTextMapPropagator()
@@ -58,6 +69,35 @@ func TestFactoryDiscoversSaaSAndBindsExactApplicationHeaders(t *testing.T) {
 	event, created, err := binding.Publisher().PublishIntent(t.Context(), intent)
 	if err != nil || !created || event.ID != "event" {
 		t.Fatalf("publish result: event=%#v created=%t err=%v", event, created, err)
+	}
+}
+
+func TestFactoryExchangesAndCachesIdentityServiceToken(t *testing.T) {
+	source := &recordingServiceTokenSource{}
+	server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+		if request.Header.Get("X-Domainry-Service-Credential") != "short-lived-service-token" {
+			t.Fatalf("service token=%q", request.Header.Get("X-Domainry-Service-Credential"))
+		}
+		switch request.URL.Path {
+		case "/v1/descriptor":
+			_ = json.NewEncoder(response).Encode(notificationsdk.Descriptor{ProtocolVersion: notificationsdk.CurrentProtocolVersion, Mode: notificationsdk.DeploymentModeSaaS, Audience: "runtime"})
+		case "/v1/events:publish":
+			_ = json.NewEncoder(response).Encode(map[string]any{"event": contract.NotificationEvent{ID: "event"}, "created": true})
+		default:
+			http.NotFound(response, request)
+		}
+	}))
+	t.Cleanup(server.Close)
+	binding, err := remote.NewFactory(remote.Config{BaseURL: server.URL, ServiceTokens: source, HTTPClient: server.Client()}).Open(t.Context(), notificationsdk.ApplicationRef{TenantID: "tenant", WorkspaceID: "workspace", ApplicationKey: "runtime"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	intent := contract.NotificationIntent{ID: "event", WorkspaceID: "workspace", SourceEventID: "source", EventType: "report.completed", Surface: "business_workspace", RecipientUserIDs: []string{"user"}, OccurredAt: "2026-08-28T00:00:00.000000000Z", SubjectType: "report", SubjectID: "report", SubjectVersion: "one"}
+	if _, _, err := binding.Publisher().PublishIntent(t.Context(), intent); err != nil {
+		t.Fatal(err)
+	}
+	if source.calls != 1 {
+		t.Fatalf("token exchange calls=%d", source.calls)
 	}
 }
 

@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	identitysdk "github.com/domainry/domainry-identity-sdk"
+	identityremote "github.com/domainry/domainry-identity-sdk/remote"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
 )
@@ -24,6 +26,7 @@ type CircuitBreakerPolicy struct {
 
 type Config struct {
 	BaseURL, ServiceCredential string
+	ServiceTokens              ServiceTokenSource
 	HTTPClient                 *http.Client
 	RequestTimeout             time.Duration
 	Retry                      RetryPolicy
@@ -32,7 +35,21 @@ type Config struct {
 }
 
 func ConfigFromEnvironment() Config {
-	return Config{BaseURL: strings.TrimSpace(os.Getenv("NOTIFICATION_SAAS_URL")), ServiceCredential: strings.TrimSpace(os.Getenv("NOTIFICATION_SAAS_SERVICE_CREDENTIAL")), ContextHeaders: OpenTelemetryContextHeaders}
+	config := Config{BaseURL: strings.TrimSpace(os.Getenv("NOTIFICATION_SAAS_URL")), ServiceCredential: strings.TrimSpace(os.Getenv("NOTIFICATION_SAAS_SERVICE_CREDENTIAL")), ContextHeaders: OpenTelemetryContextHeaders}
+	identityConfig := identityremote.ConfigFromEnvironment()
+	if identityConfig.Endpoint != "" && identityConfig.ServiceAccessToken != "" {
+		config.ServiceTokens = NewIdentityServiceTokenSource(identityremote.NewFactory(identityConfig))
+	}
+	return config
+}
+
+type ServiceToken struct {
+	AccessToken string
+	ExpiresAt   time.Time
+}
+
+type ServiceTokenSource interface {
+	Token(context.Context, identitysdk.ApplicationRef) (ServiceToken, error)
 }
 
 // OpenTelemetryContextHeaders propagates the active W3C trace/baggage context

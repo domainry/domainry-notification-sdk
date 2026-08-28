@@ -9,8 +9,10 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 
+	identitysdk "github.com/domainry/domainry-identity-sdk"
 	notificationsdk "github.com/domainry/domainry-notification-sdk"
 )
 
@@ -24,14 +26,14 @@ func (f *Factory) Open(ctx context.Context, application notificationsdk.Applicat
 	}
 	config := normalizedConfig(f.config)
 	baseURL := strings.TrimRight(strings.TrimSpace(config.BaseURL), "/")
-	if baseURL == "" || strings.TrimSpace(config.ServiceCredential) == "" {
+	if baseURL == "" || strings.TrimSpace(config.ServiceCredential) == "" && config.ServiceTokens == nil {
 		return nil, remoteError(http.StatusInternalServerError, "notification.remote_config_incomplete", false, nil)
 	}
 	parsed, err := url.Parse(baseURL)
 	if err != nil || parsed.Scheme == "" || parsed.Host == "" {
 		return nil, remoteError(http.StatusInternalServerError, "notification.remote_url_invalid", false, err)
 	}
-	b := &binding{baseURL: baseURL, serviceCredential: config.ServiceCredential, application: application, client: config.HTTPClient, requestTimeout: config.RequestTimeout, retry: config.Retry, contextHeaders: config.ContextHeaders, breaker: &circuitBreaker{policy: config.CircuitBreaker}}
+	b := &binding{baseURL: baseURL, serviceCredential: config.ServiceCredential, serviceTokens: config.ServiceTokens, application: application, client: config.HTTPClient, requestTimeout: config.RequestTimeout, retry: config.Retry, contextHeaders: config.ContextHeaders, breaker: &circuitBreaker{policy: config.CircuitBreaker}}
 	var descriptor notificationsdk.Descriptor
 	if err := b.call(ctx, http.MethodGet, "/v1/descriptor", notificationsdk.UserAuthority{}, nil, &descriptor); err != nil {
 		return nil, fmt.Errorf("discover Notification SaaS: %w", err)
@@ -51,6 +53,9 @@ func (f *Factory) Open(ctx context.Context, application notificationsdk.Applicat
 
 type binding struct {
 	baseURL, serviceCredential string
+	serviceTokens              ServiceTokenSource
+	tokenMu                    sync.Mutex
+	cachedToken                ServiceToken
 	application                notificationsdk.ApplicationRef
 	descriptor                 notificationsdk.Descriptor
 	client                     *http.Client
@@ -129,7 +134,11 @@ func (b *binding) perform(parent context.Context, method, path string, authority
 	}
 	request.Header.Set("Accept", "application/json")
 	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("X-Domainry-Service-Credential", b.serviceCredential)
+	serviceToken, err := b.serviceToken(parent)
+	if err != nil {
+		return 0, err
+	}
+	request.Header.Set("X-Domainry-Service-Credential", serviceToken)
 	request.Header.Set("X-Domainry-Tenant-ID", b.application.TenantID)
 	request.Header.Set("X-Domainry-Workspace-ID", b.application.WorkspaceID)
 	request.Header.Set("X-Domainry-Application-Key", b.application.ApplicationKey)
@@ -162,6 +171,26 @@ func (b *binding) perform(parent context.Context, method, path string, authority
 		return response.StatusCode, remoteError(http.StatusBadGateway, "notification.response_decode_failed", false, err)
 	}
 	return response.StatusCode, nil
+}
+
+func (b *binding) serviceToken(ctx context.Context) (string, error) {
+	if b.serviceTokens == nil {
+		return strings.TrimSpace(b.serviceCredential), nil
+	}
+	b.tokenMu.Lock()
+	defer b.tokenMu.Unlock()
+	if strings.TrimSpace(b.cachedToken.AccessToken) != "" && b.cachedToken.ExpiresAt.After(time.Now().UTC().Add(30*time.Second)) {
+		return b.cachedToken.AccessToken, nil
+	}
+	token, err := b.serviceTokens.Token(ctx, identitysdk.ApplicationRef{TenantID: identitysdk.TenantID(b.application.TenantID), WorkspaceID: identitysdk.WorkspaceID(b.application.WorkspaceID), ApplicationKey: identitysdk.ApplicationKey(b.application.ApplicationKey)})
+	if err != nil {
+		return "", err
+	}
+	if strings.TrimSpace(token.AccessToken) == "" || !token.ExpiresAt.After(time.Now().UTC()) {
+		return "", remoteError(http.StatusBadGateway, "notification.identity_service_token_invalid", false, nil)
+	}
+	b.cachedToken = token
+	return token.AccessToken, nil
 }
 
 func remoteError(status int, code string, retryable bool, cause error) error {
