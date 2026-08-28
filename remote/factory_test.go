@@ -44,6 +44,40 @@ func TestFactoryDiscoversSaaSAndBindsExactApplicationHeaders(t *testing.T) {
 	}
 }
 
+func TestRemoteSystemTemplatesUseOnlyServiceAuthority(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+		if request.Header.Get("Authorization") != "" || request.Header.Get("X-Domainry-Service-Credential") != "service-secret" {
+			t.Fatalf("unexpected system authority headers: %#v", request.Header)
+		}
+		switch request.URL.Path {
+		case "/v1/descriptor":
+			_ = json.NewEncoder(response).Encode(notificationsdk.Descriptor{ProtocolVersion: notificationsdk.CurrentProtocolVersion, Mode: notificationsdk.DeploymentModeSaaS, Audience: "runtime"})
+		case "/v1/system/templates:sync-published":
+			response.WriteHeader(http.StatusNoContent)
+		case "/v1/system/templates:list-published":
+			_ = json.NewEncoder(response).Encode([]contract.NotificationTemplateRecord{{Key: "welcome"}})
+		default:
+			http.NotFound(response, request)
+		}
+	}))
+	defer server.Close()
+	binding, err := remote.NewFactory(remote.Config{BaseURL: server.URL, ServiceCredential: "service-secret", HTTPClient: server.Client()}).Open(t.Context(), notificationsdk.ApplicationRef{TenantID: "tenant", WorkspaceID: "workspace", ApplicationKey: "runtime"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	system, ok := binding.(notificationsdk.SystemTemplateBinding)
+	if !ok || system.SystemTemplates() == nil {
+		t.Fatal("Remote Binding did not expose system templates")
+	}
+	if err := system.SystemTemplates().SyncPublished(t.Context(), []contract.NotificationTemplate{{Key: "welcome"}}); err != nil {
+		t.Fatal(err)
+	}
+	records, err := system.SystemTemplates().ListPublished(t.Context())
+	if err != nil || len(records) != 1 || records[0].Key != "welcome" {
+		t.Fatalf("records=%+v err=%v", records, err)
+	}
+}
+
 func TestRemoteRetriesStablePublicationButDoesNotReplayOrdinaryMutation(t *testing.T) {
 	t.Parallel()
 	discovery, publications, mutations := 0, 0, 0

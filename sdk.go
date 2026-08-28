@@ -102,6 +102,18 @@ type Binding interface {
 	Close(context.Context) error
 }
 
+// SystemTemplates is the service-authenticated installation boundary used by
+// a Runtime host during metadata restoration. It is deliberately separate
+// from user-authorized template administration.
+type SystemTemplates interface {
+	SyncPublished(context.Context, []contract.NotificationTemplate) error
+	ListPublished(context.Context) ([]contract.NotificationTemplateRecord, error)
+}
+
+type SystemTemplateBinding interface {
+	SystemTemplates() SystemTemplates
+}
+
 type WorkLocator struct {
 	Kind        string `json:"kind"`
 	WorkspaceID string `json:"workspace_id,omitempty"`

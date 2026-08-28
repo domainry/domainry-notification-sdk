@@ -60,12 +60,15 @@ type binding struct {
 	breaker                    *circuitBreaker
 }
 
-func (b *binding) Descriptor() notificationsdk.Descriptor             { return b.descriptor }
-func (b *binding) Publisher() notificationsdk.Publisher               { return publisher{binding: b} }
-func (b *binding) Inbox() notificationsdk.Inbox                       { return inbox{binding: b} }
-func (b *binding) Templates() notificationsdk.Templates               { return templates{binding: b} }
-func (b *binding) Delivery() notificationsdk.Delivery                 { return delivery{binding: b} }
-func (b *binding) Administration() notificationsdk.Administration     { return administration{binding: b} }
+func (b *binding) Descriptor() notificationsdk.Descriptor         { return b.descriptor }
+func (b *binding) Publisher() notificationsdk.Publisher           { return publisher{binding: b} }
+func (b *binding) Inbox() notificationsdk.Inbox                   { return inbox{binding: b} }
+func (b *binding) Templates() notificationsdk.Templates           { return templates{binding: b} }
+func (b *binding) Delivery() notificationsdk.Delivery             { return delivery{binding: b} }
+func (b *binding) Administration() notificationsdk.Administration { return administration{binding: b} }
+func (b *binding) SystemTemplates() notificationsdk.SystemTemplates {
+	return systemTemplates{binding: b}
+}
 func (b *binding) LocalWorkers() (notificationsdk.LocalWorkers, bool) { return nil, false }
 func (b *binding) Close(context.Context) error                        { return nil }
 

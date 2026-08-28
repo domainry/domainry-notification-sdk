@@ -13,6 +13,21 @@ type inbox struct{ binding *binding }
 type templates struct{ binding *binding }
 type delivery struct{ binding *binding }
 type administration struct{ binding *binding }
+type systemTemplates struct{ binding *binding }
+
+type systemTemplateRequest struct {
+	Templates []contract.NotificationTemplate `json:"templates,omitempty"`
+}
+
+func (s systemTemplates) SyncPublished(ctx context.Context, values []contract.NotificationTemplate) error {
+	return s.binding.call(ctx, http.MethodPost, "/v1/system/templates:sync-published", notificationsdk.UserAuthority{}, systemTemplateRequest{Templates: values}, nil)
+}
+
+func (s systemTemplates) ListPublished(ctx context.Context) ([]contract.NotificationTemplateRecord, error) {
+	var out []contract.NotificationTemplateRecord
+	err := s.binding.call(ctx, http.MethodPost, "/v1/system/templates:list-published", notificationsdk.UserAuthority{}, nil, &out)
+	return out, err
+}
 
 type publishResponse struct {
 	Event   contract.NotificationEvent `json:"event"`
