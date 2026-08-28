@@ -19,6 +19,13 @@ type Factory interface {
 type TransactionalPublisher interface {
 	CompileIntent(contract.NotificationIntent) (contract.NotificationEvent, error)
 	InsertEvent(context.Context, Executor, contract.NotificationEvent) error
+	EventCommitted(context.Context, EventIdentity) (bool, error)
+}
+
+type EventIdentity struct {
+	WorkspaceID   string
+	Source        string
+	SourceEventID string
 }
 
 type TransactionalBinding interface {
