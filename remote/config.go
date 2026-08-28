@@ -7,6 +7,9 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
 )
 
 type ContextHeaderProvider func(context.Context) http.Header
@@ -29,7 +32,15 @@ type Config struct {
 }
 
 func ConfigFromEnvironment() Config {
-	return Config{BaseURL: strings.TrimSpace(os.Getenv("NOTIFICATION_SAAS_URL")), ServiceCredential: strings.TrimSpace(os.Getenv("NOTIFICATION_SAAS_SERVICE_CREDENTIAL"))}
+	return Config{BaseURL: strings.TrimSpace(os.Getenv("NOTIFICATION_SAAS_URL")), ServiceCredential: strings.TrimSpace(os.Getenv("NOTIFICATION_SAAS_SERVICE_CREDENTIAL")), ContextHeaders: OpenTelemetryContextHeaders}
+}
+
+// OpenTelemetryContextHeaders propagates the active W3C trace/baggage context
+// without coupling generated composition to a specific exporter.
+func OpenTelemetryContextHeaders(ctx context.Context) http.Header {
+	header := http.Header{}
+	otel.GetTextMapPropagator().Inject(ctx, propagation.HeaderCarrier(header))
+	return header
 }
 
 func normalizedConfig(c Config) Config {
