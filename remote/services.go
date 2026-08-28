@@ -16,6 +16,7 @@ type delivery struct{ binding *binding }
 type administration struct{ binding *binding }
 type systemTemplates struct{ binding *binding }
 type systemSubjects struct{ binding *binding }
+type systemRetention struct{ binding *binding }
 
 type systemTemplateRequest struct {
 	Templates []contract.NotificationTemplate `json:"templates,omitempty"`
@@ -50,6 +51,24 @@ func (s systemSubjects) ExportSubject(ctx context.Context, workspaceID, subjectI
 }
 func (s systemSubjects) EraseSubject(ctx context.Context, workspaceID, subjectID string, holds json.RawMessage) (json.RawMessage, error) {
 	return s.call(ctx, "/v1/system/subjects:erase", workspaceID, subjectID, holds)
+}
+
+func (s systemRetention) Preview(ctx context.Context, request contract.NotificationRetentionPreviewRequest) (contract.NotificationRetentionPreview, error) {
+	var out contract.NotificationRetentionPreview
+	if err := request.Validate(); err != nil {
+		return out, err
+	}
+	err := s.binding.call(ctx, http.MethodPost, "/v1/system/retention:preview", notificationsdk.UserAuthority{}, request, &out)
+	return out, err
+}
+
+func (s systemRetention) ProcessBatch(ctx context.Context, request contract.NotificationRetentionBatchRequest) (contract.NotificationRetentionBatchResult, error) {
+	var out contract.NotificationRetentionBatchResult
+	if err := request.Validate(); err != nil {
+		return out, err
+	}
+	err := s.binding.call(ctx, http.MethodPost, "/v1/system/retention:process-batch", notificationsdk.UserAuthority{}, request, &out)
+	return out, err
 }
 
 type publishResponse struct {

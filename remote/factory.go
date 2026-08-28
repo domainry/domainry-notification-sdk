@@ -69,7 +69,10 @@ func (b *binding) Administration() notificationsdk.Administration { return admin
 func (b *binding) SystemTemplates() notificationsdk.SystemTemplates {
 	return systemTemplates{binding: b}
 }
-func (b *binding) SystemSubjects() notificationsdk.SystemSubjects     { return systemSubjects{binding: b} }
+func (b *binding) SystemSubjects() notificationsdk.SystemSubjects { return systemSubjects{binding: b} }
+func (b *binding) SystemRetention() notificationsdk.SystemRetention {
+	return systemRetention{binding: b}
+}
 func (b *binding) LocalWorkers() (notificationsdk.LocalWorkers, bool) { return nil, false }
 func (b *binding) Close(context.Context) error                        { return nil }
 

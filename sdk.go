@@ -125,6 +125,15 @@ type SystemSubjectBinding interface {
 	SystemSubjects() SystemSubjects
 }
 
+type SystemRetention interface {
+	Preview(context.Context, contract.NotificationRetentionPreviewRequest) (contract.NotificationRetentionPreview, error)
+	ProcessBatch(context.Context, contract.NotificationRetentionBatchRequest) (contract.NotificationRetentionBatchResult, error)
+}
+
+type SystemRetentionBinding interface {
+	SystemRetention() SystemRetention
+}
+
 type WorkLocator struct {
 	Kind        string `json:"kind"`
 	WorkspaceID string `json:"workspace_id,omitempty"`

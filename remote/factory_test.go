@@ -59,6 +59,10 @@ func TestRemoteSystemTemplatesUseOnlyServiceAuthority(t *testing.T) {
 			_ = json.NewEncoder(response).Encode([]contract.NotificationTemplateRecord{{Key: "welcome"}})
 		case "/v1/system/subjects:preview", "/v1/system/subjects:export", "/v1/system/subjects:erase":
 			_ = json.NewEncoder(response).Encode(map[string]any{"subject": "user"})
+		case "/v1/system/retention:preview":
+			_ = json.NewEncoder(response).Encode(contract.NotificationRetentionPreview{Rows: 3})
+		case "/v1/system/retention:process-batch":
+			_ = json.NewEncoder(response).Encode(contract.NotificationRetentionBatchResult{Scanned: 2, Purged: 1, Done: true})
 		default:
 			http.NotFound(response, request)
 		}
@@ -98,6 +102,20 @@ func TestRemoteSystemTemplatesUseOnlyServiceAuthority(t *testing.T) {
 		if callErr != nil || !bytes.Contains(value, []byte(`"subject":"user"`)) {
 			t.Fatalf("subject value=%s err=%v", value, callErr)
 		}
+	}
+	retentionBinding, ok := binding.(notificationsdk.SystemRetentionBinding)
+	if !ok || retentionBinding.SystemRetention() == nil {
+		t.Fatal("Remote Binding did not expose system retention")
+	}
+	policy := contract.NotificationRetentionPolicy{Key: contract.NotificationRetentionHistoryPolicy, Version: "1", DefaultRetentionSeconds: 3600}
+	now := time.Date(2026, 8, 29, 1, 0, 0, 0, time.UTC)
+	preview, err := retentionBinding.SystemRetention().Preview(t.Context(), contract.NotificationRetentionPreviewRequest{WorkspaceID: "workspace", Policy: policy, Now: now})
+	if err != nil || preview.Rows != 3 {
+		t.Fatalf("retention preview=%+v err=%v", preview, err)
+	}
+	batch, err := retentionBinding.SystemRetention().ProcessBatch(t.Context(), contract.NotificationRetentionBatchRequest{JobID: "job", WorkspaceID: "workspace", Operation: "purge", Policy: policy, Now: now, Limit: 10})
+	if err != nil || batch.Purged != 1 || !batch.Done {
+		t.Fatalf("retention batch=%+v err=%v", batch, err)
 	}
 }
 
