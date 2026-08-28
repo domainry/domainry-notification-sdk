@@ -138,8 +138,12 @@ type SystemRetentionBinding interface {
 // state boundary. Export includes a deterministic inventory and fingerprint;
 // Import must be idempotent and reject any non-matching existing state.
 type SystemMigration interface {
+	Status(context.Context) (contract.NotificationMigrationStatus, error)
+	Freeze(context.Context, contract.NotificationMigrationCommand) (contract.NotificationMigrationStatus, error)
 	Export(context.Context) (contract.NotificationPortableExport, error)
 	Import(context.Context, contract.NotificationPortableBundle) (contract.NotificationPortableImportReceipt, error)
+	Activate(context.Context, contract.NotificationMigrationCommand) (contract.NotificationMigrationStatus, error)
+	Rollback(context.Context, contract.NotificationMigrationCommand) (contract.NotificationMigrationStatus, error)
 }
 
 type SystemMigrationBinding interface {

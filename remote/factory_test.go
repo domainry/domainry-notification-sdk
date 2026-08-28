@@ -67,6 +67,8 @@ func TestRemoteSystemTemplatesUseOnlyServiceAuthority(t *testing.T) {
 			_ = json.NewEncoder(response).Encode(contract.NotificationPortableExport{Bundle: portableBundle(), Inventory: contract.NotificationPortableInventory{Rows: 1, Fingerprint: "fingerprint"}})
 		case "/v1/system/migration:import":
 			_ = json.NewEncoder(response).Encode(contract.NotificationPortableImportReceipt{FormatVersion: contract.NotificationPortableFormatV1, Fingerprint: "fingerprint", Rows: 1})
+		case "/v1/system/migration:status", "/v1/system/migration:freeze", "/v1/system/migration:activate", "/v1/system/migration:rollback":
+			_ = json.NewEncoder(response).Encode(contract.NotificationMigrationStatus{MigrationID: "migration", State: contract.NotificationMigrationFrozen, BundleFingerprint: "fingerprint"})
 		default:
 			http.NotFound(response, request)
 		}
@@ -132,6 +134,26 @@ func TestRemoteSystemTemplatesUseOnlyServiceAuthority(t *testing.T) {
 	receipt, err := migrationBinding.SystemMigration().Import(t.Context(), exported.Bundle)
 	if err != nil || receipt.Fingerprint != exported.Bundle.Fingerprint || receipt.Rows != 1 {
 		t.Fatalf("migration receipt=%+v err=%v", receipt, err)
+	}
+	command := contract.NotificationMigrationCommand{MigrationID: "migration", BundleFingerprint: "fingerprint", At: now}
+	for _, call := range []func() (contract.NotificationMigrationStatus, error){
+		func() (contract.NotificationMigrationStatus, error) {
+			return migrationBinding.SystemMigration().Status(t.Context())
+		},
+		func() (contract.NotificationMigrationStatus, error) {
+			return migrationBinding.SystemMigration().Freeze(t.Context(), contract.NotificationMigrationCommand{MigrationID: "migration", At: now})
+		},
+		func() (contract.NotificationMigrationStatus, error) {
+			return migrationBinding.SystemMigration().Activate(t.Context(), command)
+		},
+		func() (contract.NotificationMigrationStatus, error) {
+			return migrationBinding.SystemMigration().Rollback(t.Context(), command)
+		},
+	} {
+		status, transitionErr := call()
+		if transitionErr != nil || status.MigrationID != "migration" {
+			t.Fatalf("migration status=%+v err=%v", status, transitionErr)
+		}
 	}
 }
 

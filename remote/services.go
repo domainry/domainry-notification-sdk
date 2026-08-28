@@ -19,6 +19,33 @@ type systemSubjects struct{ binding *binding }
 type systemRetention struct{ binding *binding }
 type systemMigration struct{ binding *binding }
 
+func (s systemMigration) Status(ctx context.Context) (contract.NotificationMigrationStatus, error) {
+	var out contract.NotificationMigrationStatus
+	err := s.binding.call(ctx, http.MethodPost, "/v1/system/migration:status", notificationsdk.UserAuthority{}, nil, &out)
+	return out, err
+}
+
+func (s systemMigration) transition(ctx context.Context, path string, command contract.NotificationMigrationCommand, requireFingerprint bool) (contract.NotificationMigrationStatus, error) {
+	var out contract.NotificationMigrationStatus
+	if err := command.Validate(requireFingerprint); err != nil {
+		return out, err
+	}
+	err := s.binding.call(ctx, http.MethodPost, path, notificationsdk.UserAuthority{}, command, &out)
+	return out, err
+}
+
+func (s systemMigration) Freeze(ctx context.Context, command contract.NotificationMigrationCommand) (contract.NotificationMigrationStatus, error) {
+	return s.transition(ctx, "/v1/system/migration:freeze", command, false)
+}
+
+func (s systemMigration) Activate(ctx context.Context, command contract.NotificationMigrationCommand) (contract.NotificationMigrationStatus, error) {
+	return s.transition(ctx, "/v1/system/migration:activate", command, true)
+}
+
+func (s systemMigration) Rollback(ctx context.Context, command contract.NotificationMigrationCommand) (contract.NotificationMigrationStatus, error) {
+	return s.transition(ctx, "/v1/system/migration:rollback", command, true)
+}
+
 type systemTemplateRequest struct {
 	Templates []contract.NotificationTemplate `json:"templates,omitempty"`
 }

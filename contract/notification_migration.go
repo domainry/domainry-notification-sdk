@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 )
 
 const NotificationPortableFormatV1 = "domainry-notification-portable-v1"
@@ -58,4 +59,36 @@ type NotificationPortableImportReceipt struct {
 	Fingerprint    string `json:"fingerprint"`
 	Rows           int    `json:"rows"`
 	AlreadyPresent bool   `json:"already_present"`
+}
+
+type NotificationMigrationState string
+
+const (
+	NotificationMigrationActive   NotificationMigrationState = "active"
+	NotificationMigrationFrozen   NotificationMigrationState = "frozen"
+	NotificationMigrationImported NotificationMigrationState = "imported"
+	NotificationMigrationCutover  NotificationMigrationState = "cutover"
+)
+
+type NotificationMigrationCommand struct {
+	MigrationID       string    `json:"migration_id"`
+	BundleFingerprint string    `json:"bundle_fingerprint,omitempty"`
+	At                time.Time `json:"at"`
+}
+
+func (c NotificationMigrationCommand) Validate(requireFingerprint bool) error {
+	if strings.TrimSpace(c.MigrationID) == "" || c.At.IsZero() || requireFingerprint && strings.TrimSpace(c.BundleFingerprint) == "" {
+		return fmt.Errorf("notification migration command is invalid")
+	}
+	return nil
+}
+
+type NotificationMigrationStatus struct {
+	MigrationID       string                     `json:"migration_id,omitempty"`
+	Role              string                     `json:"role,omitempty"`
+	State             NotificationMigrationState `json:"state"`
+	BundleFingerprint string                     `json:"bundle_fingerprint,omitempty"`
+	FrozenAt          time.Time                  `json:"frozen_at,omitempty"`
+	ActivatedAt       time.Time                  `json:"activated_at,omitempty"`
+	ActiveLeases      int                        `json:"active_leases"`
 }
