@@ -6,64 +6,33 @@ package modulehost
 
 import (
 	"context"
-	"database/sql"
 	"time"
 
 	identitysdk "github.com/domainry/domainry-identity-sdk"
 	"github.com/domainry/domainry-notification-sdk/contract"
+	ormmigration "github.com/domainry/domainry-orm/migration"
+	"github.com/domainry/domainry-orm/sqlhost"
 )
 
-type Executor interface {
-	ExecContext(context.Context, string, ...any) (sql.Result, error)
-}
-type Queryer interface {
-	QueryContext(context.Context, string, ...any) (*sql.Rows, error)
-	QueryRowContext(context.Context, string, ...any) *sql.Row
-}
-type Database interface {
-	Executor
-	Queryer
-	BeginTx(context.Context, *sql.TxOptions) (*sql.Tx, error)
-}
+type Executor = sqlhost.Executor
+type Queryer = sqlhost.Queryer
+type Database = sqlhost.Database
 
 // SchemaBaseline is the exact source-owned physical shape that a host must
 // prove before adopting a schema created before module extraction. Indexes are
 // the source-declared indexes; database-generated primary-key indexes are not
 // part of this inventory.
-type SchemaBaseline struct {
-	Tables []SchemaTable
-}
-
-type SchemaTable struct {
-	Name    string
-	Columns []SchemaColumn
-	Indexes []SchemaIndex
-}
-
-type SchemaColumn struct {
-	Name       string
-	Type       string
-	Nullable   bool
-	PrimaryKey bool
-}
-
-type SchemaIndex struct {
-	Name    string
-	Unique  bool
-	Columns []string
-}
+type SchemaBaseline = ormmigration.Baseline
+type SchemaTable = ormmigration.Table
+type SchemaColumn = ormmigration.Column
+type SchemaIndex = ormmigration.Index
 
 // SchemaMigration is source-owned DDL applied by the project host through its
 // existing migration lock and ledger. Baseline allows an installation created
 // before module extraction to record the immutable migration only after the
 // host proves every declared table, column, physical type, nullability,
 // primary key and explicit index.
-type SchemaMigration struct {
-	Version    uint
-	Name       string
-	Statements []string
-	Baseline   *SchemaBaseline
-}
+type SchemaMigration = ormmigration.Migration
 
 type MigrationRegistrar interface {
 	Driver() string
