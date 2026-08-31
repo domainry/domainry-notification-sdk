@@ -22,7 +22,8 @@ intent carries an explicit workspace and deterministic source identity.
 
 - The root package is the stable Notification `Factory`, `Binding`, publication, and system-capability entrypoint.
 - `contract` contains deployment-neutral notification values.
-- `modulehost` describes embedded infrastructure and the host migration registrar.
+- `modulehost` describes embedded infrastructure, the host migration registrar,
+  and Notification-owned default provider-template capability bindings.
 - `remote` implements the SaaS client; `deliverygateway` is the provider delivery boundary.
 - `contracttest` contains deployment-parity tests.
 
