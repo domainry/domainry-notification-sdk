@@ -26,6 +26,7 @@ type CircuitBreakerPolicy struct {
 
 type Config struct {
 	BaseURL, ServiceCredential string
+	CapabilityContractSHA256   string
 	ServiceTokens              ServiceTokenSource
 	HTTPClient                 *http.Client
 	RequestTimeout             time.Duration
@@ -35,7 +36,10 @@ type Config struct {
 }
 
 func ConfigFromEnvironment() Config {
-	config := Config{BaseURL: strings.TrimSpace(os.Getenv("NOTIFICATION_SAAS_URL")), ServiceCredential: strings.TrimSpace(os.Getenv("NOTIFICATION_SAAS_SERVICE_CREDENTIAL")), ContextHeaders: OpenTelemetryContextHeaders}
+	config := Config{
+		BaseURL: strings.TrimSpace(os.Getenv("NOTIFICATION_SAAS_URL")), ServiceCredential: strings.TrimSpace(os.Getenv("NOTIFICATION_SAAS_SERVICE_CREDENTIAL")),
+		CapabilityContractSHA256: strings.TrimSpace(os.Getenv("NOTIFICATION_CAPABILITY_CONTRACT_SHA256")), ContextHeaders: OpenTelemetryContextHeaders,
+	}
 	identityConfig := identityremote.ConfigFromEnvironment()
 	if identityConfig.Endpoint != "" && identityConfig.ServiceAccessToken != "" {
 		config.ServiceTokens = NewIdentityServiceTokenSource(identityremote.NewFactory(identityConfig))

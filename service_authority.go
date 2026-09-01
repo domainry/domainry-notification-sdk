@@ -2,7 +2,9 @@ package notificationsdk
 
 import (
 	"net/http"
+	"strings"
 
+	"github.com/domainry/domainry-foundation/modulecapability"
 	identitysdk "github.com/domainry/domainry-identity-sdk"
 )
 
@@ -14,6 +16,10 @@ func ServiceGrantForRequest(method, path string) (identitysdk.ApplicationService
 		return identitysdk.ApplicationServiceGrant{}, &Error{StatusCode: http.StatusMethodNotAllowed, Code: "notification.method_not_allowed"}
 	}
 	grant := identitysdk.ApplicationServiceGrant{}
+	if (method == http.MethodGet && (path == modulecapability.SummaryPath || strings.HasPrefix(path, modulecapability.CategoriesPath))) ||
+		(method == http.MethodPost && path == modulecapability.ValidationPath) {
+		return serviceGrant("notification_service", "discover"), nil
+	}
 	switch path {
 	case "/v1/descriptor":
 		grant = serviceGrant("notification_service", "discover")

@@ -12,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/domainry/domainry-foundation/modulecapability"
 	identitysdk "github.com/domainry/domainry-identity-sdk"
 	notificationsdk "github.com/domainry/domainry-notification-sdk"
 )
@@ -25,6 +26,9 @@ func (f *Factory) Open(ctx context.Context, application notificationsdk.Applicat
 		return nil, err
 	}
 	config := normalizedConfig(f.config)
+	if err := modulecapability.ValidateRemoteExpectation("notification", config.CapabilityContractSHA256); err != nil {
+		return nil, err
+	}
 	baseURL := strings.TrimRight(strings.TrimSpace(config.BaseURL), "/")
 	if baseURL == "" || strings.TrimSpace(config.ServiceCredential) == "" && config.ServiceTokens == nil {
 		return nil, remoteError(http.StatusInternalServerError, "notification.remote_config_incomplete", false, nil)
@@ -48,6 +52,11 @@ func (f *Factory) Open(ctx context.Context, application notificationsdk.Applicat
 		return nil, remoteError(http.StatusForbidden, "notification.application_scope_mismatch", false, nil)
 	}
 	b.descriptor = descriptor
+	capability, err := openCapabilityBinding(ctx, b, config.CapabilityContractSHA256)
+	if err != nil {
+		return nil, fmt.Errorf("discover Notification capability contract: %w", err)
+	}
+	b.capability = capability
 	return b, nil
 }
 
@@ -58,6 +67,7 @@ type binding struct {
 	cachedTokens               map[string]ServiceToken
 	application                notificationsdk.ApplicationRef
 	descriptor                 notificationsdk.Descriptor
+	capability                 *remoteCapabilityBinding
 	client                     *http.Client
 	requestTimeout             time.Duration
 	retry                      RetryPolicy
@@ -65,7 +75,16 @@ type binding struct {
 	breaker                    *circuitBreaker
 }
 
-func (b *binding) Descriptor() notificationsdk.Descriptor         { return b.descriptor }
+func (b *binding) Descriptor() notificationsdk.Descriptor { return b.descriptor }
+func (b *binding) CapabilitySummary(ctx context.Context) (modulecapability.ModuleSummary, error) {
+	return b.capability.CapabilitySummary(ctx)
+}
+func (b *binding) CapabilityCategory(ctx context.Context, key string) (modulecapability.CategoryDocument, error) {
+	return b.capability.CapabilityCategory(ctx, key)
+}
+func (b *binding) ValidateCapabilityCandidate(ctx context.Context, request modulecapability.ValidationRequest) (modulecapability.ValidationResult, error) {
+	return b.capability.ValidateCapabilityCandidate(ctx, request)
+}
 func (b *binding) Publisher() notificationsdk.Publisher           { return publisher{binding: b} }
 func (b *binding) Inbox() notificationsdk.Inbox                   { return inbox{binding: b} }
 func (b *binding) Templates() notificationsdk.Templates           { return templates{binding: b} }

@@ -34,6 +34,17 @@ func TestValidateEventTypesContract(t *testing.T) {
 	}
 }
 
+func TestSupportedProductSurfacesAreImmutable(t *testing.T) {
+	first := SupportedProductSurfaces()
+	if len(first) != 2 || first[0] != "business_workspace" || first[1] != "consumer_portal" {
+		t.Fatalf("surfaces=%v", first)
+	}
+	first[0] = "mutated"
+	if next := SupportedProductSurfaces(); next[0] != "business_workspace" {
+		t.Fatalf("supported surface catalog was mutated: %v", next)
+	}
+}
+
 func catalogErrorCode(err error) string {
 	var target *CatalogValidationError
 	if errors.As(err, &target) {

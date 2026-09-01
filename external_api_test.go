@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/domainry/domainry-foundation/modulecapability"
 	notificationsdk "github.com/domainry/domainry-notification-sdk"
 	"github.com/domainry/domainry-notification-sdk/contract"
 )
@@ -14,7 +15,7 @@ func (f externalFactory) Open(context.Context, notificationsdk.ApplicationRef) (
 	return f.binding, nil
 }
 
-type externalBinding struct{}
+type externalBinding struct{ modulecapability.Binding }
 
 func (externalBinding) Descriptor() notificationsdk.Descriptor {
 	return notificationsdk.Descriptor{ProtocolVersion: notificationsdk.CurrentProtocolVersion, Mode: notificationsdk.DeploymentModeModule}

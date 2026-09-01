@@ -157,7 +157,16 @@ var catalogVariableTypes = map[string]bool{
 	"number": true, "string": true, "text": true,
 }
 
+var supportedProductSurfaces = []string{"business_workspace", "consumer_portal"}
+
 var catalogSurfaces = map[string]bool{"business_workspace": true, "consumer_portal": true}
+
+// SupportedProductSurfaces returns the Notification-owned product-surface
+// vocabulary used by both catalog validation and topology-neutral capability
+// candidate validation. Callers receive a copy and cannot mutate SDK truth.
+func SupportedProductSurfaces() []string {
+	return append([]string(nil), supportedProductSurfaces...)
+}
 
 func catalogContentFragments(content NotificationInboxEventTypeContent) []string {
 	result := make([]string, 0, len(content.Facts)*2+len(content.ActionLabels))
