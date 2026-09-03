@@ -42,7 +42,7 @@ func remoteTestCapabilityBinding(t testing.TB) *modulecapability.StaticBinding {
 		"operationId": "getNotificationTestCapability",
 		"responses":   map[string]any{"200": map[string]any{"description": "test"}},
 		modulecapability.OperationExtensionKey: modulecapability.OperationExtension{
-			Owner: "notification", Authorization: modulecapability.Authorization{Strategy: actioncontract.AuthorizationAuthenticatedPrincipal, WorkspaceScope: "authenticated_workspace_principal"},
+			Owner: "notification", Authorization: modulecapability.Authorization{Strategy: actioncontract.AuthorizationAuthenticated, WorkspaceScope: "authenticated_workspace_principal"},
 			Effect: modulecapability.EffectRead, Idempotency: modulecapability.Idempotency{Mode: "not_applicable"},
 		},
 	})
