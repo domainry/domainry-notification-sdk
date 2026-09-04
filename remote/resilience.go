@@ -47,7 +47,7 @@ func (b *circuitBreaker) observe(now time.Time, failed bool) {
 }
 
 func retryableRequest(method, path string) bool {
-	return method == http.MethodGet || method == http.MethodHead || method == http.MethodOptions || method == http.MethodPost && path == "/v1/events:publish"
+	return method == http.MethodGet || method == http.MethodHead || method == http.MethodOptions || method == http.MethodPost && path == "/notification/v1/events:publish"
 }
 func retryableStatus(status int) bool {
 	return status == http.StatusTooManyRequests || status == http.StatusBadGateway || status == http.StatusServiceUnavailable || status == http.StatusGatewayTimeout

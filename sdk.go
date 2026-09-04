@@ -174,7 +174,6 @@ type LocalWorkers interface {
 // verify it and never trust caller-supplied user IDs or permission lists.
 type UserAuthority struct {
 	AccessToken string `json:"-"`
-	Surface     string `json:"-"`
 }
 
 func (a UserAuthority) Validate() error {
@@ -197,15 +196,15 @@ type Inbox interface {
 	AcknowledgeAlert(context.Context, UserAuthority, string) (contract.NotificationInboxItem, error)
 	MarkAllRead(context.Context, UserAuthority, contract.NotificationInboxQuery) (int, error)
 	ResolveAction(context.Context, UserAuthority, string, string, contract.NotificationInboxQuery) (contract.NotificationInboxResolvedAction, error)
-	ListDelegations(context.Context, UserAuthority, string) ([]contract.NotificationInboxDelegation, error)
+	ListDelegations(context.Context, UserAuthority) ([]contract.NotificationInboxDelegation, error)
 	SaveDelegation(context.Context, UserAuthority, contract.NotificationInboxDelegation) (contract.NotificationInboxDelegation, error)
 	DeleteDelegation(context.Context, UserAuthority, string) error
-	ListDelegatedOwnerIDs(context.Context, UserAuthority, string) ([]string, error)
-	ListSavedViews(context.Context, UserAuthority, string) ([]contract.NotificationInboxSavedView, error)
+	ListDelegatedOwnerIDs(context.Context, UserAuthority) ([]string, error)
+	ListSavedViews(context.Context, UserAuthority) ([]contract.NotificationInboxSavedView, error)
 	SaveSavedView(context.Context, UserAuthority, contract.NotificationInboxSavedView) (contract.NotificationInboxSavedView, error)
 	DeleteSavedView(context.Context, UserAuthority, string) error
-	GetPreference(context.Context, UserAuthority, string) (contract.NotificationRecipientPreference, error)
-	SavePreference(context.Context, UserAuthority, string, contract.NotificationRecipientPreference) (contract.NotificationRecipientPreference, error)
+	GetPreference(context.Context, UserAuthority) (contract.NotificationRecipientPreference, error)
+	SavePreference(context.Context, UserAuthority, contract.NotificationRecipientPreference) (contract.NotificationRecipientPreference, error)
 }
 
 type Templates interface {

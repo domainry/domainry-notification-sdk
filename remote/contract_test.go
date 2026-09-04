@@ -13,7 +13,7 @@ import (
 
 func TestRemoteFactoryContract(t *testing.T) {
 	server := httptest.NewServer(remoteTestHandler(t, http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-		if request.URL.Path != "/v1/descriptor" {
+		if request.URL.Path != "/notification/v1/descriptor" {
 			http.NotFound(response, request)
 			return
 		}

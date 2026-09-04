@@ -66,7 +66,7 @@ type WorkNotifier interface {
 }
 
 type Recipient struct{ ID, Email, Locale, Timezone string }
-type RecipientDirectory interface {
+type RecipientResolver interface {
 	FindRecipient(context.Context, string, string) (Recipient, bool, error)
 }
 
@@ -101,7 +101,6 @@ type ProviderTemplateValidator interface {
 
 type Catalog struct {
 	DefaultLocale        string
-	Surfaces             []string
 	ExternalChannels     []string
 	Templates            []contract.NotificationTemplate
 	TemplateCapabilities []contract.NotificationTemplateCapability
@@ -121,7 +120,7 @@ type Host interface {
 	WorkerID() string
 	Catalog() Catalog
 	WorkNotifier() WorkNotifier
-	RecipientDirectory() RecipientDirectory
+	RecipientResolver() RecipientResolver
 	AudienceResolver() AudienceResolver
 	DeliveryGateway() DeliveryGateway
 	DeliveryMetrics() DeliveryMetrics

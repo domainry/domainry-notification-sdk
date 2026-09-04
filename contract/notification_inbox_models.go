@@ -37,9 +37,9 @@ type NotificationInboxActionRef struct {
 	Style        string `json:"style,omitempty"`
 }
 
-// NotificationInboxResolvedAction is safe navigation output for the current
-// Product Surface. RouteKey is interpreted by the project-owned router; a
-// persisted message never supplies a literal URL or API request.
+// NotificationInboxResolvedAction is safe navigation output. RouteKey is
+// interpreted by the project-owned router; a persisted message never supplies
+// a literal URL or API request.
 type NotificationInboxResolvedAction struct {
 	Key            string            `json:"key"`
 	Label          string            `json:"label"`
@@ -51,10 +51,10 @@ type NotificationInboxResolvedAction struct {
 }
 
 type NotificationInboxActionDescriptor struct {
-	Key           string            `json:"key"`
-	Kind          string            `json:"kind"`
-	ResourceType  string            `json:"resource_type"`
-	SurfaceRoutes map[string]string `json:"surface_routes"`
+	Key          string `json:"key"`
+	Kind         string `json:"kind"`
+	ResourceType string `json:"resource_type"`
+	RouteKey     string `json:"route_key"`
 }
 
 // NotificationInboxSnapshot is the immutable, already-sanitized in-app
@@ -83,7 +83,6 @@ type NotificationEvent struct {
 	EventType            string                               `json:"event_type"`
 	Category             string                               `json:"category"`
 	Severity             string                               `json:"severity"`
-	Surface              string                               `json:"surface"`
 	RecipientUserIDs     []string                             `json:"recipient_user_ids"`
 	AudienceResolverKeys []string                             `json:"audience_resolver_keys,omitempty"`
 	SubjectType          string                               `json:"subject_type,omitempty"`
@@ -137,13 +136,12 @@ type NotificationEventFailure struct {
 }
 
 // NotificationAlertGroup is the durable lifecycle of a continuing alert for
-// one recipient and Product Surface. Inbox rows mirror this state for fast
-// mailbox queries, but acknowledgements and module-owned recovery transitions
-// are governed by this record.
+// one recipient. Inbox rows mirror this state for fast mailbox queries, but
+// acknowledgements and module-owned recovery transitions are governed by this
+// record.
 type NotificationAlertGroup struct {
 	WorkspaceID     string `json:"workspace_id"`
 	RecipientUserID string `json:"recipient_user_id"`
-	Surface         string `json:"surface"`
 	GroupKey        string `json:"group_key"`
 	State           string `json:"state"`
 	OccurrenceCount int    `json:"occurrence_count"`
@@ -196,7 +194,6 @@ type NotificationInboxItem struct {
 	ID                  string                       `json:"id"`
 	WorkspaceID         string                       `json:"workspace_id"`
 	RecipientUserID     string                       `json:"recipient_user_id"`
-	Surface             string                       `json:"surface"`
 	EventID             string                       `json:"event_id"`
 	EventType           string                       `json:"event_type"`
 	Source              string                       `json:"source"`
@@ -241,14 +238,13 @@ type NotificationInboxQuery struct {
 }
 
 // NotificationInboxDelegation grants a delegate read-only access to the
-// owner's inbox for one Product Surface. It never copies notifications and
-// never grants authority to mutate the owner's mailbox or business resource.
+// owner's inbox. It never copies notifications and never grants authority to
+// mutate the owner's mailbox or business resource.
 type NotificationInboxDelegation struct {
 	ID             string `json:"id"`
 	WorkspaceID    string `json:"workspace_id"`
 	OwnerUserID    string `json:"owner_user_id"`
 	DelegateUserID string `json:"delegate_user_id"`
-	Surface        string `json:"surface"`
 	StartsAt       string `json:"starts_at,omitempty"`
 	EndsAt         string `json:"ends_at,omitempty"`
 	Enabled        bool   `json:"enabled"`

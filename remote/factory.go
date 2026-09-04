@@ -39,7 +39,7 @@ func (f *Factory) Open(ctx context.Context, application notificationsdk.Applicat
 	}
 	b := &binding{baseURL: baseURL, serviceCredential: config.ServiceCredential, serviceTokens: config.ServiceTokens, cachedTokens: map[string]ServiceToken{}, application: application, client: config.HTTPClient, requestTimeout: config.RequestTimeout, retry: config.Retry, contextHeaders: config.ContextHeaders, breaker: &circuitBreaker{policy: config.CircuitBreaker}}
 	var descriptor notificationsdk.Descriptor
-	if err := b.call(ctx, http.MethodGet, "/v1/descriptor", notificationsdk.UserAuthority{}, nil, &descriptor); err != nil {
+	if err := b.call(ctx, http.MethodGet, "/notification/v1/descriptor", notificationsdk.UserAuthority{}, nil, &descriptor); err != nil {
 		return nil, fmt.Errorf("discover Notification SaaS: %w", err)
 	}
 	if err := descriptor.Validate(); err != nil {
@@ -167,9 +167,6 @@ func (b *binding) perform(parent context.Context, method, path string, authority
 	request.Header.Set("X-Domainry-Application-Key", b.application.ApplicationKey)
 	if strings.TrimSpace(authority.AccessToken) != "" {
 		request.Header.Set("Authorization", "Bearer "+strings.TrimSpace(authority.AccessToken))
-	}
-	if strings.TrimSpace(authority.Surface) != "" {
-		request.Header.Set("X-Domainry-Product-Surface", strings.TrimSpace(authority.Surface))
 	}
 	if b.contextHeaders != nil {
 		copyContextHeaders(request.Header, b.contextHeaders(parent))

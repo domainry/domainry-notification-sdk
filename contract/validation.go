@@ -22,7 +22,7 @@ func (value NotificationIntent) Validate() error {
 	if strings.TrimSpace(value.WorkspaceID) == "" {
 		return ErrIntentScopeRequired
 	}
-	if strings.TrimSpace(value.ID) == "" || strings.TrimSpace(value.SourceEventID) == "" || strings.TrimSpace(value.EventType) == "" || strings.TrimSpace(value.Surface) == "" || strings.TrimSpace(value.OccurredAt) == "" {
+	if strings.TrimSpace(value.ID) == "" || strings.TrimSpace(value.SourceEventID) == "" || strings.TrimSpace(value.EventType) == "" || strings.TrimSpace(value.OccurredAt) == "" {
 		return ErrIntentIdentityRequired
 	}
 	if (strings.TrimSpace(value.SubjectType) == "") != (strings.TrimSpace(value.SubjectID) == "") || (strings.TrimSpace(value.SubjectID) != "" && strings.TrimSpace(value.SubjectVersion) == "") {

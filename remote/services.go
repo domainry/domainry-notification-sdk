@@ -21,7 +21,7 @@ type systemMigration struct{ binding *binding }
 
 func (s systemMigration) Status(ctx context.Context) (contract.NotificationMigrationStatus, error) {
 	var out contract.NotificationMigrationStatus
-	err := s.binding.call(ctx, http.MethodPost, "/v1/system/migration:status", notificationsdk.UserAuthority{}, nil, &out)
+	err := s.binding.call(ctx, http.MethodPost, "/notification/v1/system/migration:status", notificationsdk.UserAuthority{}, nil, &out)
 	return out, err
 }
 
@@ -35,15 +35,15 @@ func (s systemMigration) transition(ctx context.Context, path string, command co
 }
 
 func (s systemMigration) Freeze(ctx context.Context, command contract.NotificationMigrationCommand) (contract.NotificationMigrationStatus, error) {
-	return s.transition(ctx, "/v1/system/migration:freeze", command, false)
+	return s.transition(ctx, "/notification/v1/system/migration:freeze", command, false)
 }
 
 func (s systemMigration) Activate(ctx context.Context, command contract.NotificationMigrationCommand) (contract.NotificationMigrationStatus, error) {
-	return s.transition(ctx, "/v1/system/migration:activate", command, true)
+	return s.transition(ctx, "/notification/v1/system/migration:activate", command, true)
 }
 
 func (s systemMigration) Rollback(ctx context.Context, command contract.NotificationMigrationCommand) (contract.NotificationMigrationStatus, error) {
-	return s.transition(ctx, "/v1/system/migration:rollback", command, true)
+	return s.transition(ctx, "/notification/v1/system/migration:rollback", command, true)
 }
 
 type systemTemplateRequest struct {
@@ -51,12 +51,12 @@ type systemTemplateRequest struct {
 }
 
 func (s systemTemplates) SyncPublished(ctx context.Context, values []contract.NotificationTemplate) error {
-	return s.binding.call(ctx, http.MethodPost, "/v1/system/templates:sync-published", notificationsdk.UserAuthority{}, systemTemplateRequest{Templates: values}, nil)
+	return s.binding.call(ctx, http.MethodPost, "/notification/v1/system/templates:sync-published", notificationsdk.UserAuthority{}, systemTemplateRequest{Templates: values}, nil)
 }
 
 func (s systemTemplates) ListPublished(ctx context.Context) ([]contract.NotificationTemplateRecord, error) {
 	var out []contract.NotificationTemplateRecord
-	err := s.binding.call(ctx, http.MethodPost, "/v1/system/templates:list-published", notificationsdk.UserAuthority{}, nil, &out)
+	err := s.binding.call(ctx, http.MethodPost, "/notification/v1/system/templates:list-published", notificationsdk.UserAuthority{}, nil, &out)
 	return out, err
 }
 
@@ -72,13 +72,13 @@ func (s systemSubjects) call(ctx context.Context, path, workspaceID, subjectID s
 	return out, err
 }
 func (s systemSubjects) PreviewSubject(ctx context.Context, workspaceID, subjectID string) (json.RawMessage, error) {
-	return s.call(ctx, "/v1/system/subjects:preview", workspaceID, subjectID, nil)
+	return s.call(ctx, "/notification/v1/system/subjects:preview", workspaceID, subjectID, nil)
 }
 func (s systemSubjects) ExportSubject(ctx context.Context, workspaceID, subjectID string) (json.RawMessage, error) {
-	return s.call(ctx, "/v1/system/subjects:export", workspaceID, subjectID, nil)
+	return s.call(ctx, "/notification/v1/system/subjects:export", workspaceID, subjectID, nil)
 }
 func (s systemSubjects) EraseSubject(ctx context.Context, workspaceID, subjectID string, holds json.RawMessage) (json.RawMessage, error) {
-	return s.call(ctx, "/v1/system/subjects:erase", workspaceID, subjectID, holds)
+	return s.call(ctx, "/notification/v1/system/subjects:erase", workspaceID, subjectID, holds)
 }
 
 func (s systemRetention) Preview(ctx context.Context, request contract.NotificationRetentionPreviewRequest) (contract.NotificationRetentionPreview, error) {
@@ -86,7 +86,7 @@ func (s systemRetention) Preview(ctx context.Context, request contract.Notificat
 	if err := request.Validate(); err != nil {
 		return out, err
 	}
-	err := s.binding.call(ctx, http.MethodPost, "/v1/system/retention:preview", notificationsdk.UserAuthority{}, request, &out)
+	err := s.binding.call(ctx, http.MethodPost, "/notification/v1/system/retention:preview", notificationsdk.UserAuthority{}, request, &out)
 	return out, err
 }
 
@@ -95,13 +95,13 @@ func (s systemRetention) ProcessBatch(ctx context.Context, request contract.Noti
 	if err := request.Validate(); err != nil {
 		return out, err
 	}
-	err := s.binding.call(ctx, http.MethodPost, "/v1/system/retention:process-batch", notificationsdk.UserAuthority{}, request, &out)
+	err := s.binding.call(ctx, http.MethodPost, "/notification/v1/system/retention:process-batch", notificationsdk.UserAuthority{}, request, &out)
 	return out, err
 }
 
 func (s systemMigration) Export(ctx context.Context) (contract.NotificationPortableExport, error) {
 	var out contract.NotificationPortableExport
-	err := s.binding.call(ctx, http.MethodPost, "/v1/system/migration:export", notificationsdk.UserAuthority{}, nil, &out)
+	err := s.binding.call(ctx, http.MethodPost, "/notification/v1/system/migration:export", notificationsdk.UserAuthority{}, nil, &out)
 	return out, err
 }
 
@@ -110,7 +110,7 @@ func (s systemMigration) Import(ctx context.Context, bundle contract.Notificatio
 	if err := bundle.ValidateEnvelope(); err != nil {
 		return out, err
 	}
-	err := s.binding.call(ctx, http.MethodPost, "/v1/system/migration:import", notificationsdk.UserAuthority{}, bundle, &out)
+	err := s.binding.call(ctx, http.MethodPost, "/notification/v1/system/migration:import", notificationsdk.UserAuthority{}, bundle, &out)
 	return out, err
 }
 
@@ -124,7 +124,7 @@ func (s publisher) PublishIntent(ctx context.Context, value contract.Notificatio
 		return contract.NotificationEvent{}, false, err
 	}
 	var result publishResponse
-	err := s.binding.call(ctx, http.MethodPost, "/v1/events:publish", notificationsdk.UserAuthority{}, value, &result)
+	err := s.binding.call(ctx, http.MethodPost, "/notification/v1/events:publish", notificationsdk.UserAuthority{}, value, &result)
 	return result.Event, result.Created, err
 }
 
@@ -134,7 +134,6 @@ type inboxQueryRequest struct {
 	ID         string                                    `json:"id,omitempty"`
 	ActionKey  string                                    `json:"action_key,omitempty"`
 	Value      bool                                      `json:"value,omitempty"`
-	Surface    string                                    `json:"surface,omitempty"`
 	Key        string                                    `json:"key,omitempty"`
 	Delegation *contract.NotificationInboxDelegation     `json:"delegation,omitempty"`
 	SavedView  *contract.NotificationInboxSavedView      `json:"saved_view,omitempty"`
@@ -150,7 +149,7 @@ func (s inbox) List(ctx context.Context, a notificationsdk.UserAuthority, q cont
 	if err := q.Validate(); err != nil {
 		return out, err
 	}
-	err := s.binding.call(ctx, http.MethodPost, "/v1/inbox:list", a, inboxQueryRequest{Query: q, Cursor: cursor}, &out)
+	err := s.binding.call(ctx, http.MethodPost, "/notification/v1/inbox:list", a, inboxQueryRequest{Query: q, Cursor: cursor}, &out)
 	return out, err
 }
 func (s inbox) Get(ctx context.Context, a notificationsdk.UserAuthority, id string, q contract.NotificationInboxQuery) (contract.NotificationInboxItem, error) {
@@ -158,7 +157,7 @@ func (s inbox) Get(ctx context.Context, a notificationsdk.UserAuthority, id stri
 	if err := validateUser(a); err != nil {
 		return out, err
 	}
-	err := s.binding.call(ctx, http.MethodPost, "/v1/inbox:get", a, inboxQueryRequest{ID: id, Query: q}, &out)
+	err := s.binding.call(ctx, http.MethodPost, "/notification/v1/inbox:get", a, inboxQueryRequest{ID: id, Query: q}, &out)
 	return out, err
 }
 func (s inbox) Facets(ctx context.Context, a notificationsdk.UserAuthority, q contract.NotificationInboxQuery) (contract.NotificationInboxFacets, error) {
@@ -166,7 +165,7 @@ func (s inbox) Facets(ctx context.Context, a notificationsdk.UserAuthority, q co
 	if err := validateUser(a); err != nil {
 		return out, err
 	}
-	err := s.binding.call(ctx, http.MethodPost, "/v1/inbox:facets", a, inboxQueryRequest{Query: q}, &out)
+	err := s.binding.call(ctx, http.MethodPost, "/notification/v1/inbox:facets", a, inboxQueryRequest{Query: q}, &out)
 	return out, err
 }
 func (s inbox) SetRead(ctx context.Context, a notificationsdk.UserAuthority, id string, value bool) (contract.NotificationInboxItem, error) {
@@ -174,7 +173,7 @@ func (s inbox) SetRead(ctx context.Context, a notificationsdk.UserAuthority, id 
 	if err := validateUser(a); err != nil {
 		return out, err
 	}
-	err := s.binding.call(ctx, http.MethodPost, "/v1/inbox:set-read", a, inboxQueryRequest{ID: id, Value: value}, &out)
+	err := s.binding.call(ctx, http.MethodPost, "/notification/v1/inbox:set-read", a, inboxQueryRequest{ID: id, Value: value}, &out)
 	return out, err
 }
 func (s inbox) SetArchived(ctx context.Context, a notificationsdk.UserAuthority, id string, value bool) (contract.NotificationInboxItem, error) {
@@ -182,7 +181,7 @@ func (s inbox) SetArchived(ctx context.Context, a notificationsdk.UserAuthority,
 	if err := validateUser(a); err != nil {
 		return out, err
 	}
-	err := s.binding.call(ctx, http.MethodPost, "/v1/inbox:set-archived", a, inboxQueryRequest{ID: id, Value: value}, &out)
+	err := s.binding.call(ctx, http.MethodPost, "/notification/v1/inbox:set-archived", a, inboxQueryRequest{ID: id, Value: value}, &out)
 	return out, err
 }
 func (s inbox) AcknowledgeAlert(ctx context.Context, a notificationsdk.UserAuthority, id string) (contract.NotificationInboxItem, error) {
@@ -190,7 +189,7 @@ func (s inbox) AcknowledgeAlert(ctx context.Context, a notificationsdk.UserAutho
 	if err := validateUser(a); err != nil {
 		return out, err
 	}
-	err := s.binding.call(ctx, http.MethodPost, "/v1/inbox:acknowledge", a, inboxQueryRequest{ID: id}, &out)
+	err := s.binding.call(ctx, http.MethodPost, "/notification/v1/inbox:acknowledge", a, inboxQueryRequest{ID: id}, &out)
 	return out, err
 }
 func (s inbox) MarkAllRead(ctx context.Context, a notificationsdk.UserAuthority, q contract.NotificationInboxQuery) (int, error) {
@@ -200,7 +199,7 @@ func (s inbox) MarkAllRead(ctx context.Context, a notificationsdk.UserAuthority,
 	if err := validateUser(a); err != nil {
 		return 0, err
 	}
-	err := s.binding.call(ctx, http.MethodPost, "/v1/inbox:mark-all-read", a, inboxQueryRequest{Query: q}, &out)
+	err := s.binding.call(ctx, http.MethodPost, "/notification/v1/inbox:mark-all-read", a, inboxQueryRequest{Query: q}, &out)
 	return out.Count, err
 }
 func (s inbox) ResolveAction(ctx context.Context, a notificationsdk.UserAuthority, id, key string, q contract.NotificationInboxQuery) (contract.NotificationInboxResolvedAction, error) {
@@ -208,15 +207,15 @@ func (s inbox) ResolveAction(ctx context.Context, a notificationsdk.UserAuthorit
 	if err := validateUser(a); err != nil {
 		return out, err
 	}
-	err := s.binding.call(ctx, http.MethodPost, "/v1/inbox:resolve-action", a, inboxQueryRequest{ID: id, ActionKey: key, Query: q}, &out)
+	err := s.binding.call(ctx, http.MethodPost, "/notification/v1/inbox:resolve-action", a, inboxQueryRequest{ID: id, ActionKey: key, Query: q}, &out)
 	return out, err
 }
-func (s inbox) ListDelegations(ctx context.Context, a notificationsdk.UserAuthority, surface string) ([]contract.NotificationInboxDelegation, error) {
+func (s inbox) ListDelegations(ctx context.Context, a notificationsdk.UserAuthority) ([]contract.NotificationInboxDelegation, error) {
 	var out []contract.NotificationInboxDelegation
 	if err := validateUser(a); err != nil {
 		return nil, err
 	}
-	err := s.binding.call(ctx, http.MethodPost, "/v1/inbox/delegations:list", a, inboxQueryRequest{Surface: surface}, &out)
+	err := s.binding.call(ctx, http.MethodPost, "/notification/v1/inbox/delegations:list", a, inboxQueryRequest{}, &out)
 	return out, err
 }
 func (s inbox) SaveDelegation(ctx context.Context, a notificationsdk.UserAuthority, v contract.NotificationInboxDelegation) (contract.NotificationInboxDelegation, error) {
@@ -224,29 +223,29 @@ func (s inbox) SaveDelegation(ctx context.Context, a notificationsdk.UserAuthori
 	if err := validateUser(a); err != nil {
 		return out, err
 	}
-	err := s.binding.call(ctx, http.MethodPost, "/v1/inbox/delegations:save", a, inboxQueryRequest{Delegation: &v}, &out)
+	err := s.binding.call(ctx, http.MethodPost, "/notification/v1/inbox/delegations:save", a, inboxQueryRequest{Delegation: &v}, &out)
 	return out, err
 }
 func (s inbox) DeleteDelegation(ctx context.Context, a notificationsdk.UserAuthority, id string) error {
 	if err := validateUser(a); err != nil {
 		return err
 	}
-	return s.binding.call(ctx, http.MethodPost, "/v1/inbox/delegations:delete", a, inboxQueryRequest{ID: id}, nil)
+	return s.binding.call(ctx, http.MethodPost, "/notification/v1/inbox/delegations:delete", a, inboxQueryRequest{ID: id}, nil)
 }
-func (s inbox) ListDelegatedOwnerIDs(ctx context.Context, a notificationsdk.UserAuthority, surface string) ([]string, error) {
+func (s inbox) ListDelegatedOwnerIDs(ctx context.Context, a notificationsdk.UserAuthority) ([]string, error) {
 	var out []string
 	if err := validateUser(a); err != nil {
 		return nil, err
 	}
-	err := s.binding.call(ctx, http.MethodPost, "/v1/inbox/delegated-owners:list", a, inboxQueryRequest{Surface: surface}, &out)
+	err := s.binding.call(ctx, http.MethodPost, "/notification/v1/inbox/delegated-owners:list", a, inboxQueryRequest{}, &out)
 	return out, err
 }
-func (s inbox) ListSavedViews(ctx context.Context, a notificationsdk.UserAuthority, surface string) ([]contract.NotificationInboxSavedView, error) {
+func (s inbox) ListSavedViews(ctx context.Context, a notificationsdk.UserAuthority) ([]contract.NotificationInboxSavedView, error) {
 	var out []contract.NotificationInboxSavedView
 	if err := validateUser(a); err != nil {
 		return nil, err
 	}
-	err := s.binding.call(ctx, http.MethodPost, "/v1/inbox/saved-views:list", a, inboxQueryRequest{Surface: surface}, &out)
+	err := s.binding.call(ctx, http.MethodPost, "/notification/v1/inbox/saved-views:list", a, inboxQueryRequest{}, &out)
 	return out, err
 }
 func (s inbox) SaveSavedView(ctx context.Context, a notificationsdk.UserAuthority, v contract.NotificationInboxSavedView) (contract.NotificationInboxSavedView, error) {
@@ -254,29 +253,29 @@ func (s inbox) SaveSavedView(ctx context.Context, a notificationsdk.UserAuthorit
 	if err := validateUser(a); err != nil {
 		return out, err
 	}
-	err := s.binding.call(ctx, http.MethodPost, "/v1/inbox/saved-views:save", a, inboxQueryRequest{SavedView: &v}, &out)
+	err := s.binding.call(ctx, http.MethodPost, "/notification/v1/inbox/saved-views:save", a, inboxQueryRequest{SavedView: &v}, &out)
 	return out, err
 }
 func (s inbox) DeleteSavedView(ctx context.Context, a notificationsdk.UserAuthority, key string) error {
 	if err := validateUser(a); err != nil {
 		return err
 	}
-	return s.binding.call(ctx, http.MethodPost, "/v1/inbox/saved-views:delete", a, inboxQueryRequest{Key: key}, nil)
+	return s.binding.call(ctx, http.MethodPost, "/notification/v1/inbox/saved-views:delete", a, inboxQueryRequest{Key: key}, nil)
 }
-func (s inbox) GetPreference(ctx context.Context, a notificationsdk.UserAuthority, surface string) (contract.NotificationRecipientPreference, error) {
+func (s inbox) GetPreference(ctx context.Context, a notificationsdk.UserAuthority) (contract.NotificationRecipientPreference, error) {
 	var out contract.NotificationRecipientPreference
 	if err := validateUser(a); err != nil {
 		return out, err
 	}
-	err := s.binding.call(ctx, http.MethodPost, "/v1/inbox/preference:get", a, inboxQueryRequest{Surface: surface}, &out)
+	err := s.binding.call(ctx, http.MethodPost, "/notification/v1/inbox/preference:get", a, inboxQueryRequest{}, &out)
 	return out, err
 }
-func (s inbox) SavePreference(ctx context.Context, a notificationsdk.UserAuthority, surface string, v contract.NotificationRecipientPreference) (contract.NotificationRecipientPreference, error) {
+func (s inbox) SavePreference(ctx context.Context, a notificationsdk.UserAuthority, v contract.NotificationRecipientPreference) (contract.NotificationRecipientPreference, error) {
 	var out contract.NotificationRecipientPreference
 	if err := validateUser(a); err != nil {
 		return out, err
 	}
-	err := s.binding.call(ctx, http.MethodPost, "/v1/inbox/preference:save", a, inboxQueryRequest{Surface: surface, Preference: &v}, &out)
+	err := s.binding.call(ctx, http.MethodPost, "/notification/v1/inbox/preference:save", a, inboxQueryRequest{Preference: &v}, &out)
 	return out, err
 }
 
@@ -298,7 +297,7 @@ func (s templates) Capabilities(ctx context.Context, a notificationsdk.UserAutho
 	if err := validateUser(a); err != nil {
 		return nil, err
 	}
-	err := s.binding.call(ctx, http.MethodPost, "/v1/templates/capabilities:list", a, nil, &out)
+	err := s.binding.call(ctx, http.MethodPost, "/notification/v1/templates/capabilities:list", a, nil, &out)
 	return out, err
 }
 
@@ -307,7 +306,7 @@ func (s templates) List(ctx context.Context, a notificationsdk.UserAuthority) ([
 	if err := validateUser(a); err != nil {
 		return nil, err
 	}
-	err := s.binding.call(ctx, http.MethodPost, "/v1/templates:list", a, nil, &out)
+	err := s.binding.call(ctx, http.MethodPost, "/notification/v1/templates:list", a, nil, &out)
 	return out, err
 }
 func (s templates) Get(ctx context.Context, a notificationsdk.UserAuthority, key string) (contract.NotificationTemplateRecord, bool, error) {
@@ -318,7 +317,7 @@ func (s templates) Get(ctx context.Context, a notificationsdk.UserAuthority, key
 	if err := validateUser(a); err != nil {
 		return out.Record, false, err
 	}
-	err := s.binding.call(ctx, http.MethodPost, "/v1/templates:get", a, templateRequest{Key: key}, &out)
+	err := s.binding.call(ctx, http.MethodPost, "/notification/v1/templates:get", a, templateRequest{Key: key}, &out)
 	return out.Record, out.Found, err
 }
 func (s templates) ListVersions(ctx context.Context, a notificationsdk.UserAuthority, key string) ([]contract.NotificationTemplateVersion, error) {
@@ -326,17 +325,17 @@ func (s templates) ListVersions(ctx context.Context, a notificationsdk.UserAutho
 	if err := validateUser(a); err != nil {
 		return nil, err
 	}
-	err := s.binding.call(ctx, http.MethodPost, "/v1/templates/versions:list", a, templateRequest{Key: key}, &out)
+	err := s.binding.call(ctx, http.MethodPost, "/notification/v1/templates/versions:list", a, templateRequest{Key: key}, &out)
 	return out, err
 }
 func (s templates) SaveDraft(ctx context.Context, a notificationsdk.UserAuthority, key string, v contract.NotificationTemplate, expected string) (contract.NotificationTemplateRecord, error) {
-	return s.record(ctx, a, "/v1/templates:save-draft", templateRequest{Key: key, Template: &v, Expected: expected})
+	return s.record(ctx, a, "/notification/v1/templates:save-draft", templateRequest{Key: key, Template: &v, Expected: expected})
 }
 func (s templates) RestoreVersionDraft(ctx context.Context, a notificationsdk.UserAuthority, key string, version int, expected string) (contract.NotificationTemplateRecord, error) {
-	return s.record(ctx, a, "/v1/templates:restore-version", templateRequest{Key: key, Version: version, Expected: expected})
+	return s.record(ctx, a, "/notification/v1/templates:restore-version", templateRequest{Key: key, Version: version, Expected: expected})
 }
 func (s templates) Disable(ctx context.Context, a notificationsdk.UserAuthority, key, expected string) (contract.NotificationTemplateRecord, error) {
-	return s.record(ctx, a, "/v1/templates:disable", templateRequest{Key: key, Expected: expected})
+	return s.record(ctx, a, "/notification/v1/templates:disable", templateRequest{Key: key, Expected: expected})
 }
 func (s templates) record(ctx context.Context, a notificationsdk.UserAuthority, path string, in templateRequest) (contract.NotificationTemplateRecord, error) {
 	var out contract.NotificationTemplateRecord
@@ -347,10 +346,10 @@ func (s templates) record(ctx context.Context, a notificationsdk.UserAuthority, 
 	return out, err
 }
 func (s templates) Preview(ctx context.Context, a notificationsdk.UserAuthority, key, locale string, recipients []string, variables map[string]any) (contract.RenderedNotification, error) {
-	return s.preview(ctx, a, "/v1/templates:preview", templateRequest{Key: key, Locale: locale, Recipients: recipients, Variables: variables})
+	return s.preview(ctx, a, "/notification/v1/templates:preview", templateRequest{Key: key, Locale: locale, Recipients: recipients, Variables: variables})
 }
 func (s templates) PreviewTemplate(ctx context.Context, a notificationsdk.UserAuthority, v contract.NotificationTemplate, locale string, recipients []string, variables map[string]any) (contract.RenderedNotification, error) {
-	return s.preview(ctx, a, "/v1/templates:preview-draft", templateRequest{Template: &v, Locale: locale, Recipients: recipients, Variables: variables})
+	return s.preview(ctx, a, "/notification/v1/templates:preview-draft", templateRequest{Template: &v, Locale: locale, Recipients: recipients, Variables: variables})
 }
 func (s templates) preview(ctx context.Context, a notificationsdk.UserAuthority, path string, in templateRequest) (contract.RenderedNotification, error) {
 	var out contract.RenderedNotification
@@ -365,20 +364,20 @@ func (s templates) ListPublicationRequests(ctx context.Context, a notificationsd
 	if err := validateUser(a); err != nil {
 		return nil, err
 	}
-	err := s.binding.call(ctx, http.MethodPost, "/v1/publications:list", a, templateRequest{Key: key}, &out)
+	err := s.binding.call(ctx, http.MethodPost, "/notification/v1/publications:list", a, templateRequest{Key: key}, &out)
 	return out, err
 }
 func (s templates) RequestPublication(ctx context.Context, a notificationsdk.UserAuthority, key, scheduled, expected string) (contract.NotificationPublicationRequest, error) {
-	return s.publication(ctx, a, "/v1/publications:request", templateRequest{Key: key, Scheduled: scheduled, Expected: expected})
+	return s.publication(ctx, a, "/notification/v1/publications:request", templateRequest{Key: key, Scheduled: scheduled, Expected: expected})
 }
 func (s templates) ApprovePublication(ctx context.Context, a notificationsdk.UserAuthority, id string) (contract.NotificationPublicationRequest, error) {
-	return s.publication(ctx, a, "/v1/publications:approve", templateRequest{ID: id})
+	return s.publication(ctx, a, "/notification/v1/publications:approve", templateRequest{ID: id})
 }
 func (s templates) RejectPublication(ctx context.Context, a notificationsdk.UserAuthority, id, reason string) (contract.NotificationPublicationRequest, error) {
-	return s.publication(ctx, a, "/v1/publications:reject", templateRequest{ID: id, Reason: reason})
+	return s.publication(ctx, a, "/notification/v1/publications:reject", templateRequest{ID: id, Reason: reason})
 }
 func (s templates) CancelPublication(ctx context.Context, a notificationsdk.UserAuthority, id string) (contract.NotificationPublicationRequest, error) {
-	return s.publication(ctx, a, "/v1/publications:cancel", templateRequest{ID: id})
+	return s.publication(ctx, a, "/notification/v1/publications:cancel", templateRequest{ID: id})
 }
 func (s templates) publication(ctx context.Context, a notificationsdk.UserAuthority, path string, in templateRequest) (contract.NotificationPublicationRequest, error) {
 	var out contract.NotificationPublicationRequest
@@ -399,7 +398,7 @@ func (s delivery) GetPolicy(ctx context.Context, a notificationsdk.UserAuthority
 	if err := validateUser(a); err != nil {
 		return out, err
 	}
-	err := s.binding.call(ctx, http.MethodPost, "/v1/delivery-policy:get", a, nil, &out)
+	err := s.binding.call(ctx, http.MethodPost, "/notification/v1/delivery-policy:get", a, nil, &out)
 	return out, err
 }
 func (s delivery) SavePolicy(ctx context.Context, a notificationsdk.UserAuthority, v contract.NotificationDeliveryPolicy) (contract.NotificationDeliveryPolicy, error) {
@@ -407,7 +406,7 @@ func (s delivery) SavePolicy(ctx context.Context, a notificationsdk.UserAuthorit
 	if err := validateUser(a); err != nil {
 		return out, err
 	}
-	err := s.binding.call(ctx, http.MethodPost, "/v1/delivery-policy:save", a, deliveryRequest{Policy: &v}, &out)
+	err := s.binding.call(ctx, http.MethodPost, "/notification/v1/delivery-policy:save", a, deliveryRequest{Policy: &v}, &out)
 	return out, err
 }
 func (s delivery) ListRecipientPreferences(ctx context.Context, a notificationsdk.UserAuthority) ([]contract.NotificationRecipientPreference, error) {
@@ -415,7 +414,7 @@ func (s delivery) ListRecipientPreferences(ctx context.Context, a notificationsd
 	if err := validateUser(a); err != nil {
 		return nil, err
 	}
-	err := s.binding.call(ctx, http.MethodPost, "/v1/recipient-preferences:list", a, nil, &out)
+	err := s.binding.call(ctx, http.MethodPost, "/notification/v1/recipient-preferences:list", a, nil, &out)
 	return out, err
 }
 func (s delivery) SaveRecipientPreference(ctx context.Context, a notificationsdk.UserAuthority, v contract.NotificationRecipientPreference) (contract.NotificationRecipientPreference, error) {
@@ -423,7 +422,7 @@ func (s delivery) SaveRecipientPreference(ctx context.Context, a notificationsdk
 	if err := validateUser(a); err != nil {
 		return out, err
 	}
-	err := s.binding.call(ctx, http.MethodPost, "/v1/recipient-preferences:save", a, inboxQueryRequest{Preference: &v}, &out)
+	err := s.binding.call(ctx, http.MethodPost, "/notification/v1/recipient-preferences:save", a, inboxQueryRequest{Preference: &v}, &out)
 	return out, err
 }
 func (s delivery) Metrics(ctx context.Context, a notificationsdk.UserAuthority, since string) (contract.NotificationDeliveryMetrics, error) {
@@ -431,7 +430,7 @@ func (s delivery) Metrics(ctx context.Context, a notificationsdk.UserAuthority, 
 	if err := validateUser(a); err != nil {
 		return out, err
 	}
-	err := s.binding.call(ctx, http.MethodPost, "/v1/delivery-metrics:get", a, deliveryRequest{Since: since}, &out)
+	err := s.binding.call(ctx, http.MethodPost, "/notification/v1/delivery-metrics:get", a, deliveryRequest{Since: since}, &out)
 	return out, err
 }
 
@@ -444,7 +443,7 @@ func (s administration) GovernanceCatalog(ctx context.Context, a notificationsdk
 	if err := validateUser(a); err != nil {
 		return out, err
 	}
-	err := s.binding.call(ctx, http.MethodPost, "/v1/governance/catalog:get", a, nil, &out)
+	err := s.binding.call(ctx, http.MethodPost, "/notification/v1/governance/catalog:get", a, nil, &out)
 	return out, err
 }
 func (s administration) InboxGovernanceMetrics(ctx context.Context, a notificationsdk.UserAuthority, since string) (contract.NotificationInboxGovernanceMetrics, error) {
@@ -452,7 +451,7 @@ func (s administration) InboxGovernanceMetrics(ctx context.Context, a notificati
 	if err := validateUser(a); err != nil {
 		return out, err
 	}
-	err := s.binding.call(ctx, http.MethodPost, "/v1/governance/inbox-metrics:get", a, administrationRequest{Since: since}, &out)
+	err := s.binding.call(ctx, http.MethodPost, "/notification/v1/governance/inbox-metrics:get", a, administrationRequest{Since: since}, &out)
 	return out, err
 }
 

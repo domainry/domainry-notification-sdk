@@ -12,7 +12,7 @@ import (
 	"github.com/domainry/domainry-notification-sdk/contract"
 )
 
-const AcceptPath = "/v1/notification-deliveries:accept"
+const AcceptPath = "/notification/deliveries/accept"
 
 type Fallback struct {
 	ConnectorKey  string                        `json:"connector_key"`

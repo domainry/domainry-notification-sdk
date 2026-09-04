@@ -49,12 +49,12 @@ func TestFactoryDiscoversSaaSAndBindsExactApplicationHeaders(t *testing.T) {
 	t.Parallel()
 	server := httptest.NewServer(remoteTestHandler(t, http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 		switch request.URL.Path {
-		case "/v1/descriptor":
+		case "/notification/v1/descriptor":
 			if request.Header.Get("X-Domainry-Service-Credential") != "service-secret" || request.Header.Get("X-Domainry-Tenant-ID") != "tenant" || request.Header.Get("X-Domainry-Workspace-ID") != "workspace" || request.Header.Get("X-Domainry-Application-Key") != "runtime" {
 				t.Errorf("discovery scope headers are incomplete: %#v", request.Header)
 			}
 			_ = json.NewEncoder(response).Encode(notificationsdk.Descriptor{ProtocolVersion: notificationsdk.CurrentProtocolVersion, Mode: notificationsdk.DeploymentModeSaaS, Audience: "runtime"})
-		case "/v1/events:publish":
+		case "/notification/v1/events:publish":
 			if request.Header.Get("Authorization") != "" {
 				t.Error("service publication unexpectedly carried user bearer authority")
 			}
@@ -69,7 +69,7 @@ func TestFactoryDiscoversSaaSAndBindsExactApplicationHeaders(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	intent := contract.NotificationIntent{ID: "event", WorkspaceID: "workspace", SourceEventID: "source", EventType: "report.completed", Surface: "business_workspace", RecipientUserIDs: []string{"user"}, OccurredAt: "2026-08-28T00:00:00.000000000Z", SubjectType: "report", SubjectID: "report", SubjectVersion: "one"}
+	intent := contract.NotificationIntent{ID: "event", WorkspaceID: "workspace", SourceEventID: "source", EventType: "report.completed", RecipientUserIDs: []string{"user"}, OccurredAt: "2026-08-28T00:00:00.000000000Z", SubjectType: "report", SubjectID: "report", SubjectVersion: "one"}
 	event, created, err := binding.Publisher().PublishIntent(t.Context(), intent)
 	if err != nil || !created || event.ID != "event" {
 		t.Fatalf("publish result: event=%#v created=%t err=%v", event, created, err)
@@ -83,9 +83,9 @@ func TestFactoryExchangesAndCachesIdentityServiceToken(t *testing.T) {
 			t.Fatalf("service token=%q", request.Header.Get("X-Domainry-Service-Credential"))
 		}
 		switch request.URL.Path {
-		case "/v1/descriptor":
+		case "/notification/v1/descriptor":
 			_ = json.NewEncoder(response).Encode(notificationsdk.Descriptor{ProtocolVersion: notificationsdk.CurrentProtocolVersion, Mode: notificationsdk.DeploymentModeSaaS, Audience: "runtime"})
-		case "/v1/events:publish":
+		case "/notification/v1/events:publish":
 			_ = json.NewEncoder(response).Encode(map[string]any{"event": contract.NotificationEvent{ID: "event"}, "created": true})
 		default:
 			http.NotFound(response, request)
@@ -96,7 +96,7 @@ func TestFactoryExchangesAndCachesIdentityServiceToken(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	intent := contract.NotificationIntent{ID: "event", WorkspaceID: "workspace", SourceEventID: "source", EventType: "report.completed", Surface: "business_workspace", RecipientUserIDs: []string{"user"}, OccurredAt: "2026-08-28T00:00:00.000000000Z", SubjectType: "report", SubjectID: "report", SubjectVersion: "one"}
+	intent := contract.NotificationIntent{ID: "event", WorkspaceID: "workspace", SourceEventID: "source", EventType: "report.completed", RecipientUserIDs: []string{"user"}, OccurredAt: "2026-08-28T00:00:00.000000000Z", SubjectType: "report", SubjectID: "report", SubjectVersion: "one"}
 	if _, _, err := binding.Publisher().PublishIntent(t.Context(), intent); err != nil {
 		t.Fatal(err)
 	}
@@ -111,23 +111,23 @@ func TestRemoteSystemTemplatesUseOnlyServiceAuthority(t *testing.T) {
 			t.Fatalf("unexpected system authority headers: %#v", request.Header)
 		}
 		switch request.URL.Path {
-		case "/v1/descriptor":
+		case "/notification/v1/descriptor":
 			_ = json.NewEncoder(response).Encode(notificationsdk.Descriptor{ProtocolVersion: notificationsdk.CurrentProtocolVersion, Mode: notificationsdk.DeploymentModeSaaS, Audience: "runtime"})
-		case "/v1/system/templates:sync-published":
+		case "/notification/v1/system/templates:sync-published":
 			response.WriteHeader(http.StatusNoContent)
-		case "/v1/system/templates:list-published":
+		case "/notification/v1/system/templates:list-published":
 			_ = json.NewEncoder(response).Encode([]contract.NotificationTemplateRecord{{Key: "welcome"}})
-		case "/v1/system/subjects:preview", "/v1/system/subjects:export", "/v1/system/subjects:erase":
+		case "/notification/v1/system/subjects:preview", "/notification/v1/system/subjects:export", "/notification/v1/system/subjects:erase":
 			_ = json.NewEncoder(response).Encode(map[string]any{"subject": "user"})
-		case "/v1/system/retention:preview":
+		case "/notification/v1/system/retention:preview":
 			_ = json.NewEncoder(response).Encode(contract.NotificationRetentionPreview{Rows: 3})
-		case "/v1/system/retention:process-batch":
+		case "/notification/v1/system/retention:process-batch":
 			_ = json.NewEncoder(response).Encode(contract.NotificationRetentionBatchResult{Scanned: 2, Purged: 1, Done: true})
-		case "/v1/system/migration:export":
+		case "/notification/v1/system/migration:export":
 			_ = json.NewEncoder(response).Encode(contract.NotificationPortableExport{Bundle: portableBundle(), Inventory: contract.NotificationPortableInventory{Rows: 1, Fingerprint: "fingerprint"}})
-		case "/v1/system/migration:import":
+		case "/notification/v1/system/migration:import":
 			_ = json.NewEncoder(response).Encode(contract.NotificationPortableImportReceipt{FormatVersion: contract.NotificationPortableFormatV1, Fingerprint: "fingerprint", Rows: 1})
-		case "/v1/system/migration:status", "/v1/system/migration:freeze", "/v1/system/migration:activate", "/v1/system/migration:rollback":
+		case "/notification/v1/system/migration:status", "/notification/v1/system/migration:freeze", "/notification/v1/system/migration:activate", "/notification/v1/system/migration:rollback":
 			_ = json.NewEncoder(response).Encode(contract.NotificationMigrationStatus{MigrationID: "migration", State: contract.NotificationMigrationFrozen, BundleFingerprint: "fingerprint"})
 		default:
 			http.NotFound(response, request)
@@ -232,10 +232,10 @@ func TestRemoteRetriesStablePublicationButDoesNotReplayOrdinaryMutation(t *testi
 	discovery, publications, mutations := 0, 0, 0
 	server := httptest.NewServer(remoteTestHandler(t, http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 		switch request.URL.Path {
-		case "/v1/descriptor":
+		case "/notification/v1/descriptor":
 			discovery++
 			_ = json.NewEncoder(response).Encode(notificationsdk.Descriptor{ProtocolVersion: notificationsdk.CurrentProtocolVersion, Mode: notificationsdk.DeploymentModeSaaS, Audience: "runtime"})
-		case "/v1/events:publish":
+		case "/notification/v1/events:publish":
 			publications++
 			if publications == 1 {
 				response.WriteHeader(http.StatusServiceUnavailable)
@@ -243,7 +243,7 @@ func TestRemoteRetriesStablePublicationButDoesNotReplayOrdinaryMutation(t *testi
 				return
 			}
 			_ = json.NewEncoder(response).Encode(map[string]any{"event": contract.NotificationEvent{ID: "event"}, "created": true})
-		case "/v1/inbox:set-read":
+		case "/notification/v1/inbox:set-read":
 			mutations++
 			response.WriteHeader(http.StatusServiceUnavailable)
 			_ = json.NewEncoder(response).Encode(notificationsdk.Error{Code: "notification.unavailable", Retryable: true})
@@ -255,7 +255,7 @@ func TestRemoteRetriesStablePublicationButDoesNotReplayOrdinaryMutation(t *testi
 	if err != nil {
 		t.Fatal(err)
 	}
-	intent := contract.NotificationIntent{ID: "event", WorkspaceID: "workspace", SourceEventID: "source", EventType: "report.completed", Surface: "business_workspace", RecipientUserIDs: []string{"user"}, OccurredAt: "2026-08-28T00:00:00.000000000Z", SubjectType: "report", SubjectID: "report", SubjectVersion: "one"}
+	intent := contract.NotificationIntent{ID: "event", WorkspaceID: "workspace", SourceEventID: "source", EventType: "report.completed", RecipientUserIDs: []string{"user"}, OccurredAt: "2026-08-28T00:00:00.000000000Z", SubjectType: "report", SubjectID: "report", SubjectVersion: "one"}
 	if _, _, err := binding.Publisher().PublishIntent(t.Context(), intent); err != nil {
 		t.Fatal(err)
 	}
@@ -306,7 +306,7 @@ func TestFactoryRejectsModuleDescriptorAndAudienceMismatch(t *testing.T) {
 func TestUserUseCaseRequiresAndForwardsIdentityBearerToken(t *testing.T) {
 	t.Parallel()
 	server := httptest.NewServer(remoteTestHandler(t, http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-		if request.URL.Path == "/v1/descriptor" {
+		if request.URL.Path == "/notification/v1/descriptor" {
 			_ = json.NewEncoder(response).Encode(notificationsdk.Descriptor{ProtocolVersion: notificationsdk.CurrentProtocolVersion, Mode: notificationsdk.DeploymentModeSaaS, Audience: "runtime"})
 			return
 		}

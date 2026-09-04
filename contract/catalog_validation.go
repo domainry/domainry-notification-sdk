@@ -100,9 +100,6 @@ func ValidateEventType(value NotificationEventType) (NotificationEventType, erro
 	if !map[string]bool{"info": true, "warning": true, "critical": true}[value.DefaultSeverity] {
 		return value, invalidCatalog("backend.notification.event_type_severity_invalid", "event_type", value.Key)
 	}
-	if len(value.Surfaces) == 0 {
-		return value, invalidCatalog("backend.notification.event_type_surface_invalid", "event_type", value.Key)
-	}
 	variableKeys := map[string]bool{}
 	for index, variable := range value.Variables {
 		variable.Key, variable.Type = strings.TrimSpace(variable.Key), strings.TrimSpace(variable.Type)
@@ -115,20 +112,11 @@ func ValidateEventType(value NotificationEventType) (NotificationEventType, erro
 		variableKeys[variable.Key] = true
 		value.Variables[index] = variable
 	}
-	for _, surface := range value.Surfaces {
-		if !catalogSurfaces[strings.TrimSpace(surface)] {
-			return value, invalidCatalog("backend.notification.event_type_surface_invalid", "event_type", value.Key)
-		}
-	}
 	for actionIndex, descriptor := range value.Actions {
-		descriptor.Key, descriptor.Kind, descriptor.ResourceType = strings.TrimSpace(descriptor.Key), strings.TrimSpace(descriptor.Kind), strings.TrimSpace(descriptor.ResourceType)
-		if !templateStableKeyPattern.MatchString(descriptor.Key) || (descriptor.Kind != "route" && descriptor.Kind != "business_action") || !templateStableKeyPattern.MatchString(descriptor.ResourceType) || len(descriptor.SurfaceRoutes) == 0 {
+		descriptor.Key, descriptor.Kind = strings.TrimSpace(descriptor.Key), strings.TrimSpace(descriptor.Kind)
+		descriptor.ResourceType, descriptor.RouteKey = strings.TrimSpace(descriptor.ResourceType), strings.TrimSpace(descriptor.RouteKey)
+		if !templateStableKeyPattern.MatchString(descriptor.Key) || (descriptor.Kind != "route" && descriptor.Kind != "business_action") || !templateStableKeyPattern.MatchString(descriptor.ResourceType) || !templateStableKeyPattern.MatchString(descriptor.RouteKey) {
 			return value, invalidCatalog("backend.notification.event_type_action_invalid", "event_type", value.Key)
-		}
-		for surface, routeKey := range descriptor.SurfaceRoutes {
-			if !catalogSurfaces[strings.TrimSpace(surface)] || !templateStableKeyPattern.MatchString(strings.TrimSpace(routeKey)) {
-				return value, invalidCatalog("backend.notification.event_type_action_route_invalid", "action_key", descriptor.Key)
-			}
 		}
 		value.Actions[actionIndex] = descriptor
 		for locale, content := range value.Locales {
@@ -155,17 +143,6 @@ func ValidateEventType(value NotificationEventType) (NotificationEventType, erro
 var catalogVariableTypes = map[string]bool{
 	"boolean": true, "date": true, "datetime": true, "email": true,
 	"number": true, "string": true, "text": true,
-}
-
-var supportedProductSurfaces = []string{"business_workspace", "consumer_portal"}
-
-var catalogSurfaces = map[string]bool{"business_workspace": true, "consumer_portal": true}
-
-// SupportedProductSurfaces returns the Notification-owned product-surface
-// vocabulary used by both catalog validation and topology-neutral capability
-// candidate validation. Callers receive a copy and cannot mutate SDK truth.
-func SupportedProductSurfaces() []string {
-	return append([]string(nil), supportedProductSurfaces...)
 }
 
 func catalogContentFragments(content NotificationInboxEventTypeContent) []string {

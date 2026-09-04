@@ -5,7 +5,6 @@ type NotificationEventType struct {
 	Source            string                                       `json:"source"`
 	Category          string                                       `json:"category"`
 	DefaultSeverity   string                                       `json:"default_severity"`
-	Surfaces          []string                                     `json:"surfaces"`
 	MandatoryInApp    bool                                         `json:"mandatory_in_app"`
 	TemplateKey       string                                       `json:"template_key"`
 	DefaultLocale     string                                       `json:"default_locale"`
@@ -32,7 +31,6 @@ type NotificationIntent struct {
 	SourceEventID        string         `json:"source_event_id"`
 	EventType            string         `json:"event_type"`
 	Severity             string         `json:"severity,omitempty"`
-	Surface              string         `json:"surface"`
 	RecipientUserIDs     []string       `json:"recipient_user_ids"`
 	AudienceResolverKeys []string       `json:"audience_resolver_keys,omitempty"`
 	SubjectType          string         `json:"subject_type,omitempty"`
@@ -109,7 +107,6 @@ type NotificationInboxGovernanceMetrics struct {
 	ByCategory  []NotificationInboxAggregate    `json:"by_category"`
 	BySeverity  []NotificationInboxAggregate    `json:"by_severity"`
 	BySource    []NotificationInboxAggregate    `json:"by_source"`
-	BySurface   []NotificationInboxAggregate    `json:"by_surface"`
 }
 
 type NotificationEventFailureAggregate struct {
