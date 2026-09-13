@@ -11,15 +11,14 @@ func TestApplicationRefRequiresExplicitApplicationScope(t *testing.T) {
 	t.Parallel()
 	for _, ref := range []notificationsdk.ApplicationRef{
 		{},
-		{TenantID: "tenant", WorkspaceID: "workspace"},
-		{TenantID: "tenant", ApplicationKey: "notification"},
-		{WorkspaceID: "workspace", ApplicationKey: "notification"},
+		{WorkspaceID: "workspace"},
+		{ApplicationKey: "notification"},
 	} {
 		if ref.Validate() == nil {
 			t.Fatalf("expected invalid application ref: %#v", ref)
 		}
 	}
-	if err := (notificationsdk.ApplicationRef{TenantID: "tenant", WorkspaceID: "workspace", ApplicationKey: "notification"}).Validate(); err != nil {
+	if err := (notificationsdk.ApplicationRef{WorkspaceID: "workspace", ApplicationKey: "notification"}).Validate(); err != nil {
 		t.Fatalf("validate complete application ref: %v", err)
 	}
 }

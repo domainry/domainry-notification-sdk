@@ -15,7 +15,7 @@ func TestRemoteRetriesUnknownOutcomeWithStableAuthenticatedIdentity(t *testing.T
 	var mu sync.Mutex
 	requests := []Request{}
 	server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-		if request.URL.Path != AcceptPath || request.Header.Get("X-Domainry-Service-Credential") != "credential" || request.Header.Get("X-Domainry-Tenant-ID") != "tenant" || request.Header.Get("X-Domainry-Workspace-ID") != "workspace" || request.Header.Get("X-Domainry-Application-Key") != "application" {
+		if request.URL.Path != AcceptPath || request.Header.Get("X-Domainry-Service-Credential") != "credential" || request.Header.Get("X-Domainry-Tenant-ID") != "" || request.Header.Get("X-Domainry-Workspace-ID") != "workspace" || request.Header.Get("X-Domainry-Application-Key") != "application" {
 			http.Error(response, "invalid boundary", http.StatusForbidden)
 			return
 		}
@@ -39,7 +39,7 @@ func TestRemoteRetriesUnknownOutcomeWithStableAuthenticatedIdentity(t *testing.T
 	if err != nil {
 		t.Fatal(err)
 	}
-	application := notificationsdk.ApplicationRef{TenantID: "tenant", WorkspaceID: "workspace", ApplicationKey: "application"}
+	application := notificationsdk.ApplicationRef{WorkspaceID: "workspace", ApplicationKey: "application"}
 	input := Request{RequestID: "request", WorkspaceID: "workspace", PlanID: "plan", EventID: "event", Channel: "email", ConnectorKey: "smtp", Operation: "send", DedupeKey: "dedupe", CreatedAt: "2026-08-28T00:00:00Z"}
 	receipt, err := remote.Dispatch(t.Context(), application, input)
 	if err != nil || receipt.MessageID != "message" {
@@ -51,7 +51,7 @@ func TestRemoteRetriesUnknownOutcomeWithStableAuthenticatedIdentity(t *testing.T
 }
 
 func TestRequestRequiresExactApplicationWorkspace(t *testing.T) {
-	application := notificationsdk.ApplicationRef{TenantID: "tenant", WorkspaceID: "workspace", ApplicationKey: "application"}
+	application := notificationsdk.ApplicationRef{WorkspaceID: "workspace", ApplicationKey: "application"}
 	request := Request{RequestID: "request", WorkspaceID: "other", PlanID: "plan", EventID: "event", Channel: "email", ConnectorKey: "smtp", Operation: "send", DedupeKey: "dedupe", CreatedAt: "now"}
 	if err := request.Validate(application); err == nil {
 		t.Fatal("cross-workspace Delivery Gateway request was accepted")

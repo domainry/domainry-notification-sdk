@@ -162,7 +162,6 @@ func (b *binding) perform(parent context.Context, method, path string, authority
 		return 0, err
 	}
 	request.Header.Set("X-Domainry-Service-Credential", serviceToken)
-	request.Header.Set("X-Domainry-Tenant-ID", b.application.TenantID)
 	request.Header.Set("X-Domainry-Workspace-ID", b.application.WorkspaceID)
 	request.Header.Set("X-Domainry-Application-Key", b.application.ApplicationKey)
 	if strings.TrimSpace(authority.AccessToken) != "" {
@@ -204,7 +203,7 @@ func (b *binding) serviceToken(ctx context.Context, grant identitysdk.Applicatio
 	if strings.TrimSpace(cached.AccessToken) != "" && cached.ExpiresAt.After(time.Now().UTC().Add(30*time.Second)) {
 		return cached.AccessToken, nil
 	}
-	token, err := b.serviceTokens.Token(ctx, identitysdk.ApplicationRef{TenantID: identitysdk.TenantID(b.application.TenantID), WorkspaceID: identitysdk.WorkspaceID(b.application.WorkspaceID), ApplicationKey: identitysdk.ApplicationKey(b.application.ApplicationKey)}, grant)
+	token, err := b.serviceTokens.Token(ctx, identitysdk.ApplicationRef{WorkspaceID: identitysdk.WorkspaceID(b.application.WorkspaceID), ApplicationKey: identitysdk.ApplicationKey(b.application.ApplicationKey)}, grant)
 	if err != nil {
 		return "", err
 	}

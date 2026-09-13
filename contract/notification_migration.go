@@ -10,13 +10,12 @@ import (
 const NotificationPortableFormatV1 = "domainry-notification-portable-v1"
 
 type NotificationPortableScope struct {
-	TenantID       string `json:"tenant_id"`
 	WorkspaceID    string `json:"workspace_id"`
 	ApplicationKey string `json:"application_key"`
 }
 
 func (s NotificationPortableScope) Validate() error {
-	if strings.TrimSpace(s.TenantID) == "" || strings.TrimSpace(s.WorkspaceID) == "" || strings.TrimSpace(s.ApplicationKey) == "" {
+	if strings.TrimSpace(s.WorkspaceID) == "" || strings.TrimSpace(s.ApplicationKey) == "" {
 		return fmt.Errorf("notification portable scope is invalid")
 	}
 	return nil

@@ -80,7 +80,6 @@ func (r *Remote) perform(parent context.Context, application notificationsdk.App
 	}
 	httpRequest.Header.Set("Content-Type", "application/json")
 	httpRequest.Header.Set("X-Domainry-Service-Credential", r.config.ServiceCredential)
-	httpRequest.Header.Set("X-Domainry-Tenant-ID", application.TenantID)
 	httpRequest.Header.Set("X-Domainry-Workspace-ID", application.WorkspaceID)
 	httpRequest.Header.Set("X-Domainry-Application-Key", application.ApplicationKey)
 	response, err := r.config.HTTPClient.Do(httpRequest)

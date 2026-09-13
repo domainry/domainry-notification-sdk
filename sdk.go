@@ -49,13 +49,12 @@ func (e *Error) Unwrap() error {
 // ApplicationRef binds one Factory instance to an exact scope. No field may
 // be inferred from another field.
 type ApplicationRef struct {
-	TenantID       string `json:"tenant_id"`
 	WorkspaceID    string `json:"workspace_id"`
 	ApplicationKey string `json:"application_key"`
 }
 
 func (r ApplicationRef) Validate() error {
-	if strings.TrimSpace(r.TenantID) == "" || strings.TrimSpace(r.WorkspaceID) == "" || strings.TrimSpace(r.ApplicationKey) == "" {
+	if strings.TrimSpace(r.WorkspaceID) == "" || strings.TrimSpace(r.ApplicationKey) == "" {
 		return &Error{StatusCode: 400, Code: "notification.application_scope_invalid"}
 	}
 	return nil

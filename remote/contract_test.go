@@ -21,6 +21,6 @@ func TestRemoteFactoryContract(t *testing.T) {
 	})))
 	defer server.Close()
 	contracttest.Run(t, func(testing.TB) (notificationsdk.Factory, notificationsdk.ApplicationRef) {
-		return remote.NewFactory(remote.Config{BaseURL: server.URL, ServiceCredential: "service", CapabilityContractSHA256: remoteTestCapabilitySHA256(t), HTTPClient: server.Client()}), notificationsdk.ApplicationRef{TenantID: "tenant", WorkspaceID: "workspace", ApplicationKey: "runtime"}
+		return remote.NewFactory(remote.Config{BaseURL: server.URL, ServiceCredential: "service", CapabilityContractSHA256: remoteTestCapabilitySHA256(t), HTTPClient: server.Client()}), notificationsdk.ApplicationRef{WorkspaceID: "workspace", ApplicationKey: "runtime"}
 	})
 }
