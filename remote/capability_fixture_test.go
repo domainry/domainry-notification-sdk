@@ -52,10 +52,9 @@ func remoteTestCapabilityBinding(t testing.TB) *modulecapability.StaticBinding {
 	binding, err := modulecapability.NewStaticBinding(modulecapability.ModuleSummary{
 		Identity: modulecapability.ModuleIdentity{Key: "notification", SourceOwner: "notification", ModuleVersion: "test", ValidationRevision: "test-v1", SupportedDeploymentModes: []modulecapability.DeploymentMode{modulecapability.DeploymentModeModule, modulecapability.DeploymentModeSaaS}},
 		Name:     "Notification", Description: "Remote test Notification capability contract.",
-		Scenarios: modulecapability.AdaptationScenarios{
-			UseWhen: []string{"test notification"}, DoNotUseWhen: []string{"not a notification"}, RequirementSignals: []string{"notify"}, ProvidedCapabilities: []string{"notification.test"},
-			RequiredModules: []string{}, OptionalModules: []string{}, ConflictingModules: []string{}, AssemblyChains: []string{"test_chain"}, ValidationScopes: []string{"notification.test"},
-			SelectionExamples: []modulecapability.ScenarioExample{{Requirement: "notify", Reason: "test"}}, RejectionExamples: []modulecapability.ScenarioExample{{Requirement: "store", Reason: "test"}},
+		Composition: modulecapability.ModuleComposition{
+			ProvidedCapabilities: []string{"notification.test"},
+			RequiredModules:      []string{}, OptionalModules: []string{}, ConflictingModules: []string{}, AssemblyChains: []string{"test_chain"}, ValidationScopes: []string{"notification.test"},
 		},
 	}, []modulecapability.CategoryDocument{{
 		Category: modulecapability.CategorySummary{Key: "notification.test", Name: "Test", Description: "Test category.", OperationCount: 1, AssemblyChains: []string{"test_chain"}, ValidationScopes: []string{"notification.test"}},
