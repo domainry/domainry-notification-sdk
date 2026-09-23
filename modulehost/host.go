@@ -40,10 +40,6 @@ type MigrationRegistrar interface {
 	ApplyOwnedMigrations(context.Context, string, []SchemaMigration) error
 }
 
-type MigrationHost interface {
-	Migrations() MigrationRegistrar
-}
-
 // ManagedOperationStoreHost supplies the installation-wide Operation ledger
 // used by template publication requests and their fenced worker lease.
 type ManagedOperationStoreHost interface {
@@ -129,6 +125,7 @@ type Catalog struct {
 type Host interface {
 	Database() Database
 	Dialect() Dialect
+	Migrations() MigrationRegistrar
 	WorkspaceScope() WorkspaceScope
 	QueueScopes() QueueScopeIndex
 	Identity() identitysdk.Binding
