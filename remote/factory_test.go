@@ -64,7 +64,7 @@ func TestFactoryDiscoversSaaSAndBindsExactApplicationHeaders(t *testing.T) {
 		}
 	})))
 	defer server.Close()
-	factory := remote.NewFactory(remote.Config{BaseURL: server.URL, ServiceCredential: "service-secret", CapabilityContractSHA256: remoteTestCapabilitySHA256(t), HTTPClient: server.Client()})
+	factory := remote.NewFactory(remote.Config{BaseURL: server.URL, ServiceCredential: "service-secret", HTTPClient: server.Client()})
 	binding, err := factory.Open(t.Context(), notificationsdk.ApplicationRef{WorkspaceID: "workspace", ApplicationKey: "runtime"})
 	if err != nil {
 		t.Fatal(err)
@@ -92,7 +92,7 @@ func TestFactoryExchangesAndCachesIdentityServiceToken(t *testing.T) {
 		}
 	})))
 	t.Cleanup(server.Close)
-	binding, err := remote.NewFactory(remote.Config{BaseURL: server.URL, ServiceTokens: source, CapabilityContractSHA256: remoteTestCapabilitySHA256(t), HTTPClient: server.Client()}).Open(t.Context(), notificationsdk.ApplicationRef{WorkspaceID: "workspace", ApplicationKey: "runtime"})
+	binding, err := remote.NewFactory(remote.Config{BaseURL: server.URL, ServiceTokens: source, HTTPClient: server.Client()}).Open(t.Context(), notificationsdk.ApplicationRef{WorkspaceID: "workspace", ApplicationKey: "runtime"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -134,7 +134,7 @@ func TestRemoteSystemTemplatesUseOnlyServiceAuthority(t *testing.T) {
 		}
 	})))
 	defer server.Close()
-	binding, err := remote.NewFactory(remote.Config{BaseURL: server.URL, ServiceCredential: "service-secret", CapabilityContractSHA256: remoteTestCapabilitySHA256(t), HTTPClient: server.Client()}).Open(t.Context(), notificationsdk.ApplicationRef{WorkspaceID: "workspace", ApplicationKey: "runtime"})
+	binding, err := remote.NewFactory(remote.Config{BaseURL: server.URL, ServiceCredential: "service-secret", HTTPClient: server.Client()}).Open(t.Context(), notificationsdk.ApplicationRef{WorkspaceID: "workspace", ApplicationKey: "runtime"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -250,7 +250,7 @@ func TestRemoteRetriesStablePublicationButDoesNotReplayOrdinaryMutation(t *testi
 		}
 	})))
 	defer server.Close()
-	factory := remote.NewFactory(remote.Config{BaseURL: server.URL, ServiceCredential: "service", CapabilityContractSHA256: remoteTestCapabilitySHA256(t), HTTPClient: server.Client(), Retry: remote.RetryPolicy{MaxAttempts: 2, InitialBackoff: time.Millisecond, MaxBackoff: time.Millisecond}})
+	factory := remote.NewFactory(remote.Config{BaseURL: server.URL, ServiceCredential: "service", HTTPClient: server.Client(), Retry: remote.RetryPolicy{MaxAttempts: 2, InitialBackoff: time.Millisecond, MaxBackoff: time.Millisecond}})
 	binding, err := factory.Open(t.Context(), notificationsdk.ApplicationRef{WorkspaceID: "workspace", ApplicationKey: "runtime"})
 	if err != nil {
 		t.Fatal(err)
@@ -279,7 +279,7 @@ func TestRemotePropagatesTraceHeadersWithoutAllowingCredentialOverride(t *testin
 		_ = json.NewEncoder(response).Encode(notificationsdk.Descriptor{ProtocolVersion: notificationsdk.CurrentProtocolVersion, Mode: notificationsdk.DeploymentModeSaaS, Audience: "runtime"})
 	})))
 	defer server.Close()
-	factory := remote.NewFactory(remote.Config{BaseURL: server.URL, ServiceCredential: "real-service", CapabilityContractSHA256: remoteTestCapabilitySHA256(t), HTTPClient: server.Client(), ContextHeaders: func(context.Context) http.Header {
+	factory := remote.NewFactory(remote.Config{BaseURL: server.URL, ServiceCredential: "real-service", HTTPClient: server.Client(), ContextHeaders: func(context.Context) http.Header {
 		return http.Header{"Traceparent": []string{"00-trace-span-01"}, "X-Domainry-Service-Credential": []string{"evil"}}
 	}})
 	if _, err := factory.Open(t.Context(), notificationsdk.ApplicationRef{WorkspaceID: "workspace", ApplicationKey: "runtime"}); err != nil {
@@ -295,7 +295,7 @@ func TestFactoryRejectsModuleDescriptorAndAudienceMismatch(t *testing.T) {
 	} {
 		descriptor := descriptor
 		server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, _ *http.Request) { _ = json.NewEncoder(response).Encode(descriptor) }))
-		factory := remote.NewFactory(remote.Config{BaseURL: server.URL, ServiceCredential: "service-secret", CapabilityContractSHA256: remoteTestCapabilitySHA256(t), HTTPClient: server.Client()})
+		factory := remote.NewFactory(remote.Config{BaseURL: server.URL, ServiceCredential: "service-secret", HTTPClient: server.Client()})
 		if _, err := factory.Open(t.Context(), notificationsdk.ApplicationRef{WorkspaceID: "workspace", ApplicationKey: "runtime"}); err == nil {
 			t.Fatalf("accepted invalid descriptor %#v", descriptor)
 		}
@@ -316,7 +316,7 @@ func TestUserUseCaseRequiresAndForwardsIdentityBearerToken(t *testing.T) {
 		_ = json.NewEncoder(response).Encode(contract.NotificationInboxPage{})
 	})))
 	defer server.Close()
-	binding, err := remote.NewFactory(remote.Config{BaseURL: server.URL, ServiceCredential: "service-secret", CapabilityContractSHA256: remoteTestCapabilitySHA256(t), HTTPClient: server.Client()}).Open(t.Context(), notificationsdk.ApplicationRef{WorkspaceID: "workspace", ApplicationKey: "runtime"})
+	binding, err := remote.NewFactory(remote.Config{BaseURL: server.URL, ServiceCredential: "service-secret", HTTPClient: server.Client()}).Open(t.Context(), notificationsdk.ApplicationRef{WorkspaceID: "workspace", ApplicationKey: "runtime"})
 	if err != nil {
 		t.Fatal(err)
 	}

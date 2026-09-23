@@ -9,6 +9,7 @@ import (
 	"time"
 
 	identitysdk "github.com/domainry/domainry-identity-sdk"
+	metadatasdk "github.com/domainry/domainry-metadata-sdk"
 	"github.com/domainry/domainry-notification-sdk/contract"
 	ormmigration "github.com/domainry/domainry-orm/migration"
 	"github.com/domainry/domainry-orm/sqlhost"
@@ -42,6 +43,29 @@ type MigrationRegistrar interface {
 
 type MigrationHost interface {
 	Migrations() MigrationRegistrar
+}
+
+// DefinitionStoreHost supplies the installation-wide versioned Definition
+// store used by Notification policies and templates. Notification must not
+// create private definition/version tables beside this shared catalog.
+type DefinitionStoreHost interface {
+	DefinitionStore() metadatasdk.DefinitionStore
+}
+
+// ManagedOperationStoreHost supplies the installation-wide Operation ledger
+// used by template publication requests and their fenced worker lease.
+type ManagedOperationStoreHost interface {
+	ManagedOperationStore() ManagedOperationStore
+}
+
+// OperationControlStoreHost supplies the installation-wide durable control
+// registry used to fence Notification data cutover across Runtime instances.
+type OperationControlStoreHost interface {
+	OperationControlStore() OperationControlStore
+}
+
+type RetentionArchiveStoreHost interface {
+	RetentionArchiveStore() RetentionArchiveStore
 }
 
 type Dialect interface {

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/domainry/domainry-foundation/modulecapability"
 	"github.com/domainry/domainry-notification-sdk/contract"
 )
 
@@ -93,7 +92,6 @@ type DatabaseFactory interface {
 
 // Binding exposes business use cases, never stores, processors or worker loops.
 type Binding interface {
-	modulecapability.Binding
 	Descriptor() Descriptor
 	Publisher() Publisher
 	Inbox() Inbox

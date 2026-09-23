@@ -53,6 +53,7 @@ type NotificationPublicationTransition struct {
 }
 
 type NotificationDeliveryPolicy struct {
+	Revision               string   `json:"revision"`
 	Enabled                bool     `json:"enabled"`
 	QuietHoursEnabled      bool     `json:"quiet_hours_enabled"`
 	QuietStart             string   `json:"quiet_start"`
