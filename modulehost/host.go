@@ -40,18 +40,6 @@ type MigrationRegistrar interface {
 	ApplyOwnedMigrations(context.Context, string, []SchemaMigration) error
 }
 
-// ManagedOperationStoreHost supplies the installation-wide Operation ledger
-// used by template publication requests and their fenced worker lease.
-type ManagedOperationStoreHost interface {
-	ManagedOperationStore() ManagedOperationStore
-}
-
-// OperationControlStoreHost supplies the installation-wide durable control
-// registry used to fence Notification data cutover across Runtime instances.
-type OperationControlStoreHost interface {
-	OperationControlStore() OperationControlStore
-}
-
 type RetentionArchiveStoreHost interface {
 	RetentionArchiveStore() RetentionArchiveStore
 }
