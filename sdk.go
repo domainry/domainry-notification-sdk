@@ -232,4 +232,6 @@ type Delivery interface {
 type Administration interface {
 	GovernanceCatalog(context.Context, UserAuthority) (contract.NotificationGovernanceCatalog, error)
 	InboxGovernanceMetrics(context.Context, UserAuthority, string) (contract.NotificationInboxGovernanceMetrics, error)
+	ListDeadLetters(context.Context, UserAuthority, string, int) (contract.NotificationDeadLetterPage, error)
+	RedriveDeadLetter(context.Context, UserAuthority, string) (contract.NotificationDeadLetterRedrive, error)
 }

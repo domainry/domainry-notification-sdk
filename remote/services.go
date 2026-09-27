@@ -435,7 +435,10 @@ func (s delivery) Metrics(ctx context.Context, a notificationsdk.UserAuthority, 
 }
 
 type administrationRequest struct {
-	Since string `json:"since,omitempty"`
+	Since   string `json:"since,omitempty"`
+	Cursor  string `json:"cursor,omitempty"`
+	Limit   int    `json:"limit,omitempty"`
+	EventID string `json:"event_id,omitempty"`
 }
 
 func (s administration) GovernanceCatalog(ctx context.Context, a notificationsdk.UserAuthority) (contract.NotificationGovernanceCatalog, error) {
@@ -452,6 +455,22 @@ func (s administration) InboxGovernanceMetrics(ctx context.Context, a notificati
 		return out, err
 	}
 	err := s.binding.call(ctx, http.MethodPost, "/notification/v1/governance/inbox-metrics:get", a, administrationRequest{Since: since}, &out)
+	return out, err
+}
+func (s administration) ListDeadLetters(ctx context.Context, a notificationsdk.UserAuthority, cursor string, limit int) (contract.NotificationDeadLetterPage, error) {
+	var out contract.NotificationDeadLetterPage
+	if err := validateUser(a); err != nil {
+		return out, err
+	}
+	err := s.binding.call(ctx, http.MethodPost, "/notification/v1/governance/dead-letters:list", a, administrationRequest{Cursor: cursor, Limit: limit}, &out)
+	return out, err
+}
+func (s administration) RedriveDeadLetter(ctx context.Context, a notificationsdk.UserAuthority, eventID string) (contract.NotificationDeadLetterRedrive, error) {
+	var out contract.NotificationDeadLetterRedrive
+	if err := validateUser(a); err != nil {
+		return out, err
+	}
+	err := s.binding.call(ctx, http.MethodPost, "/notification/v1/governance/dead-letters:redrive", a, administrationRequest{EventID: eventID}, &out)
 	return out, err
 }
 

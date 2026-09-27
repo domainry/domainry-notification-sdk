@@ -49,8 +49,10 @@ func ServiceGrantForRequest(method, path string) (identitysdk.ApplicationService
 		grant = serviceGrant("notification_preference", "read")
 	case "/notification/v1/recipient-preferences:save":
 		grant = serviceGrant("notification_preference", "update")
-	case "/notification/v1/delivery-metrics:get", "/notification/v1/governance/catalog:get", "/notification/v1/governance/inbox-metrics:get":
+	case "/notification/v1/delivery-metrics:get", "/notification/v1/governance/catalog:get", "/notification/v1/governance/inbox-metrics:get", "/notification/v1/governance/dead-letters:list":
 		grant = serviceGrant("notification_governance", "read")
+	case "/notification/v1/governance/dead-letters:redrive":
+		grant = serviceGrant("notification_governance", "redrive")
 	case "/notification/v1/system/subjects:preview", "/notification/v1/system/subjects:export":
 		grant = serviceGrant("notification_governance", "export")
 	case "/notification/v1/system/subjects:erase":
