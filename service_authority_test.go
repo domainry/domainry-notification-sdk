@@ -14,6 +14,7 @@ func TestServiceGrantForRequestSeparatesPublicationUserAndGovernanceAuthority(t 
 		"/notification/v1/templates:save-draft":           {"notification_template", "draft"},
 		"/notification/v1/system/subjects:erase":          {"notification_governance", "erase"},
 		"/notification/v1/system/retention:process-batch": {"notification_governance", "retention"},
+		"/notification/v1/system/alerts:get-group":        {"notification_governance", "read"},
 		"/notification/v1/system/migration:activate":      {"notification_governance", "migrate"},
 	}
 	for path, want := range tests {

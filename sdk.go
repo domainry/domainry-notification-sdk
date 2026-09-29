@@ -133,6 +133,18 @@ type SystemRetentionBinding interface {
 	SystemRetention() SystemRetention
 }
 
+// SystemAlerts is the service-authenticated source-state boundary used by a
+// host evaluator before it publishes an alert transition. Notification owns
+// the durable alert lifecycle; callers may only read one exact recipient/group
+// identity and must still publish transitions through Publisher.
+type SystemAlerts interface {
+	GetAlertGroup(context.Context, string, string, string) (contract.NotificationAlertGroup, bool, error)
+}
+
+type SystemAlertBinding interface {
+	SystemAlerts() SystemAlerts
+}
+
 // SystemMigration is a service-authenticated, application-scoped portable
 // state boundary. Export includes a deterministic inventory and fingerprint;
 // Import must be idempotent and reject any non-matching existing state.

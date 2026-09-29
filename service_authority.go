@@ -59,6 +59,8 @@ func ServiceGrantForRequest(method, path string) (identitysdk.ApplicationService
 		grant = serviceGrant("notification_governance", "erase")
 	case "/notification/v1/system/retention:preview", "/notification/v1/system/retention:process-batch":
 		grant = serviceGrant("notification_governance", "retention")
+	case "/notification/v1/system/alerts:get-group":
+		grant = serviceGrant("notification_governance", "read")
 	case "/notification/v1/system/migration:status", "/notification/v1/system/migration:freeze", "/notification/v1/system/migration:export", "/notification/v1/system/migration:import", "/notification/v1/system/migration:activate", "/notification/v1/system/migration:rollback":
 		grant = serviceGrant("notification_governance", "migrate")
 	default:

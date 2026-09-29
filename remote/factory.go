@@ -78,6 +78,7 @@ func (b *binding) SystemSubjects() notificationsdk.SystemSubjects { return syste
 func (b *binding) SystemRetention() notificationsdk.SystemRetention {
 	return systemRetention{binding: b}
 }
+func (b *binding) SystemAlerts() notificationsdk.SystemAlerts { return systemAlerts{binding: b} }
 func (b *binding) SystemMigration() notificationsdk.SystemMigration {
 	return systemMigration{binding: b}
 }

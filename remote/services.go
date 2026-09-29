@@ -17,6 +17,7 @@ type administration struct{ binding *binding }
 type systemTemplates struct{ binding *binding }
 type systemSubjects struct{ binding *binding }
 type systemRetention struct{ binding *binding }
+type systemAlerts struct{ binding *binding }
 type systemMigration struct{ binding *binding }
 
 func (s systemMigration) Status(ctx context.Context) (contract.NotificationMigrationStatus, error) {
@@ -97,6 +98,25 @@ func (s systemRetention) ProcessBatch(ctx context.Context, request contract.Noti
 	}
 	err := s.binding.call(ctx, http.MethodPost, "/notification/v1/system/retention:process-batch", notificationsdk.UserAuthority{}, request, &out)
 	return out, err
+}
+
+type systemAlertGroupRequest struct {
+	WorkspaceID     string `json:"workspace_id"`
+	RecipientUserID string `json:"recipient_user_id"`
+	GroupKey        string `json:"group_key"`
+}
+
+type systemAlertGroupResponse struct {
+	Group contract.NotificationAlertGroup `json:"group"`
+	Found bool                            `json:"found"`
+}
+
+func (s systemAlerts) GetAlertGroup(ctx context.Context, workspaceID, recipientUserID, groupKey string) (contract.NotificationAlertGroup, bool, error) {
+	var out systemAlertGroupResponse
+	err := s.binding.call(ctx, http.MethodPost, "/notification/v1/system/alerts:get-group", notificationsdk.UserAuthority{}, systemAlertGroupRequest{
+		WorkspaceID: workspaceID, RecipientUserID: recipientUserID, GroupKey: groupKey,
+	}, &out)
+	return out.Group, out.Found, err
 }
 
 func (s systemMigration) Export(ctx context.Context) (contract.NotificationPortableExport, error) {

@@ -123,6 +123,8 @@ func TestRemoteSystemTemplatesUseOnlyServiceAuthority(t *testing.T) {
 			_ = json.NewEncoder(response).Encode(contract.NotificationRetentionPreview{Rows: 3})
 		case "/notification/v1/system/retention:process-batch":
 			_ = json.NewEncoder(response).Encode(contract.NotificationRetentionBatchResult{Scanned: 2, Purged: 1, Done: true})
+		case "/notification/v1/system/alerts:get-group":
+			_ = json.NewEncoder(response).Encode(map[string]any{"group": contract.NotificationAlertGroup{WorkspaceID: "workspace", RecipientUserID: "user", GroupKey: "group", State: "firing"}, "found": true})
 		case "/notification/v1/system/migration:export":
 			_ = json.NewEncoder(response).Encode(contract.NotificationPortableExport{Bundle: portableBundle(), Inventory: contract.NotificationPortableInventory{Rows: 1, Fingerprint: "fingerprint"}})
 		case "/notification/v1/system/migration:import":
@@ -182,6 +184,14 @@ func TestRemoteSystemTemplatesUseOnlyServiceAuthority(t *testing.T) {
 	batch, err := retentionBinding.SystemRetention().ProcessBatch(t.Context(), contract.NotificationRetentionBatchRequest{JobID: "job", WorkspaceID: "workspace", Operation: "purge", Policy: policy, Now: now, Limit: 10})
 	if err != nil || batch.Purged != 1 || !batch.Done {
 		t.Fatalf("retention batch=%+v err=%v", batch, err)
+	}
+	alertBinding, ok := binding.(notificationsdk.SystemAlertBinding)
+	if !ok || alertBinding.SystemAlerts() == nil {
+		t.Fatal("Remote Binding did not expose system alert groups")
+	}
+	group, found, err := alertBinding.SystemAlerts().GetAlertGroup(t.Context(), "workspace", "user", "group")
+	if err != nil || !found || group.State != "firing" {
+		t.Fatalf("alert group=%+v found=%t err=%v", group, found, err)
 	}
 	migrationBinding, ok := binding.(notificationsdk.SystemMigrationBinding)
 	if !ok || migrationBinding.SystemMigration() == nil {
