@@ -12,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/domainry/domainry-foundation/telemetry"
 	identitysdk "github.com/domainry/domainry-identity-sdk"
 	notificationsdk "github.com/domainry/domainry-notification-sdk"
 )
@@ -33,7 +34,7 @@ func (f *Factory) Open(ctx context.Context, application notificationsdk.Applicat
 	if err != nil || parsed.Scheme == "" || parsed.Host == "" {
 		return nil, remoteError(http.StatusInternalServerError, "notification.remote_url_invalid", false, err)
 	}
-	b := &binding{baseURL: baseURL, serviceCredential: config.ServiceCredential, serviceTokens: config.ServiceTokens, cachedTokens: map[string]ServiceToken{}, application: application, client: config.HTTPClient, requestTimeout: config.RequestTimeout, retry: config.Retry, contextHeaders: config.ContextHeaders, breaker: &circuitBreaker{policy: config.CircuitBreaker}}
+	b := &binding{baseURL: baseURL, serviceCredential: config.ServiceCredential, serviceTokens: config.ServiceTokens, cachedTokens: map[string]ServiceToken{}, application: application, client: telemetry.InstrumentHTTPClient(config.HTTPClient, "github.com/domainry/domainry-notification-sdk/remote"), requestTimeout: config.RequestTimeout, retry: config.Retry, breaker: &circuitBreaker{policy: config.CircuitBreaker}}
 	var descriptor notificationsdk.Descriptor
 	if err := b.call(ctx, http.MethodGet, "/notification/v1/descriptor", notificationsdk.UserAuthority{}, nil, &descriptor); err != nil {
 		return nil, fmt.Errorf("discover Notification SaaS: %w", err)
@@ -61,7 +62,6 @@ type binding struct {
 	client                     *http.Client
 	requestTimeout             time.Duration
 	retry                      RetryPolicy
-	contextHeaders             ContextHeaderProvider
 	breaker                    *circuitBreaker
 }
 
@@ -129,6 +129,7 @@ func (b *binding) perform(parent context.Context, method, path string, authority
 	if encoded != nil {
 		body = bytes.NewReader(encoded)
 	}
+	ctx = telemetry.WithHTTPClientOperation(ctx, "notification.remote")
 	request, err := http.NewRequestWithContext(ctx, method, b.baseURL+path, body)
 	if err != nil {
 		return 0, remoteError(http.StatusInternalServerError, "notification.request_build_failed", false, err)
@@ -148,9 +149,6 @@ func (b *binding) perform(parent context.Context, method, path string, authority
 	request.Header.Set("X-Domainry-Application-Key", b.application.ApplicationKey)
 	if strings.TrimSpace(authority.AccessToken) != "" {
 		request.Header.Set("Authorization", "Bearer "+strings.TrimSpace(authority.AccessToken))
-	}
-	if b.contextHeaders != nil {
-		copyContextHeaders(request.Header, b.contextHeaders(parent))
 	}
 	response, err := b.client.Do(request)
 	if err != nil {

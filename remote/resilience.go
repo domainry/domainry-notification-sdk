@@ -3,7 +3,6 @@ package remote
 import (
 	"context"
 	"net/http"
-	"strings"
 	"sync"
 	"time"
 )
@@ -70,21 +69,5 @@ func waitRetry(ctx context.Context, delay time.Duration) error {
 		return nil
 	case <-ctx.Done():
 		return ctx.Err()
-	}
-}
-
-var protectedHeaders = map[string]bool{"Authorization": true, "Content-Length": true, "Content-Type": true, "Cookie": true, "Host": true, "X-Domainry-Service-Credential": true, "X-Domainry-Tenant-Id": true, "X-Domainry-Workspace-Id": true, "X-Domainry-Application-Key": true}
-
-func copyContextHeaders(target, source http.Header) {
-	for key, values := range source {
-		canonical := http.CanonicalHeaderKey(strings.TrimSpace(key))
-		if canonical == "" || protectedHeaders[canonical] {
-			continue
-		}
-		for _, value := range values {
-			if value = strings.TrimSpace(value); value != "" {
-				target.Add(canonical, value)
-			}
-		}
 	}
 }

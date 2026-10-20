@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/domainry/domainry-foundation/telemetry"
 	notificationsdk "github.com/domainry/domainry-notification-sdk"
 )
 
@@ -32,6 +33,7 @@ func NewRemote(config RemoteConfig) (*Remote, error) {
 	if config.HTTPClient == nil {
 		config.HTTPClient = http.DefaultClient
 	}
+	config.HTTPClient = telemetry.InstrumentHTTPClient(config.HTTPClient, "github.com/domainry/domainry-notification-sdk/deliverygateway")
 	if config.RequestTimeout <= 0 {
 		config.RequestTimeout = 10 * time.Second
 	}
@@ -74,6 +76,7 @@ func (r *Remote) Dispatch(ctx context.Context, application notificationsdk.Appli
 func (r *Remote) perform(parent context.Context, application notificationsdk.ApplicationRef, body []byte) (Receipt, bool, error) {
 	ctx, cancel := context.WithTimeout(parent, r.config.RequestTimeout)
 	defer cancel()
+	ctx = telemetry.WithHTTPClientOperation(ctx, "notification.delivery_gateway")
 	httpRequest, err := http.NewRequestWithContext(ctx, http.MethodPost, r.config.BaseURL+AcceptPath, bytes.NewReader(body))
 	if err != nil {
 		return Receipt{}, false, err

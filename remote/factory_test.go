@@ -14,7 +14,7 @@ import (
 	"github.com/domainry/domainry-notification-sdk/contract"
 	"github.com/domainry/domainry-notification-sdk/remote"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/propagation"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -30,19 +30,6 @@ func (source *recordingServiceTokenSource) Token(_ context.Context, application 
 		return remote.ServiceToken{}, &notificationsdk.Error{Code: "test.application_scope_mismatch"}
 	}
 	return remote.ServiceToken{AccessToken: "short-lived-service-token", ExpiresAt: time.Now().Add(time.Minute)}, nil
-}
-
-func TestDefaultRemoteConfigurationPropagatesActiveW3CTrace(t *testing.T) {
-	previous := otel.GetTextMapPropagator()
-	otel.SetTextMapPropagator(propagation.TraceContext{})
-	t.Cleanup(func() { otel.SetTextMapPropagator(previous) })
-	traceID, _ := trace.TraceIDFromHex("4bf92f3577b34da6a3ce929d0e0e4736")
-	spanID, _ := trace.SpanIDFromHex("00f067aa0ba902b7")
-	ctx := trace.ContextWithSpanContext(t.Context(), trace.NewSpanContext(trace.SpanContextConfig{TraceID: traceID, SpanID: spanID, TraceFlags: trace.FlagsSampled}))
-	header := remote.OpenTelemetryContextHeaders(ctx)
-	if header.Get("traceparent") != "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01" {
-		t.Fatalf("traceparent=%q", header.Get("traceparent"))
-	}
 }
 
 func TestFactoryDiscoversSaaSAndBindsExactApplicationHeaders(t *testing.T) {
@@ -278,9 +265,12 @@ func TestRemoteRetriesStablePublicationButDoesNotReplayOrdinaryMutation(t *testi
 }
 
 func TestRemotePropagatesTraceHeadersWithoutAllowingCredentialOverride(t *testing.T) {
-	t.Parallel()
+	provider := sdktrace.NewTracerProvider()
+	previousProvider := otel.GetTracerProvider()
+	otel.SetTracerProvider(provider)
+	t.Cleanup(func() { _ = provider.Shutdown(context.Background()); otel.SetTracerProvider(previousProvider) })
 	server := httptest.NewServer(remoteTestHandler(t, http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-		if request.Header.Get("Traceparent") != "00-trace-span-01" {
+		if traceparent := request.Header.Get("Traceparent"); len(traceparent) != 55 || traceparent[3:35] != "4bf92f3577b34da6a3ce929d0e0e4736" {
 			t.Errorf("trace header missing: %#v", request.Header)
 		}
 		if request.Header.Get("X-Domainry-Service-Credential") != "real-service" {
@@ -289,10 +279,11 @@ func TestRemotePropagatesTraceHeadersWithoutAllowingCredentialOverride(t *testin
 		_ = json.NewEncoder(response).Encode(notificationsdk.Descriptor{ProtocolVersion: notificationsdk.CurrentProtocolVersion, Mode: notificationsdk.DeploymentModeSaaS, Audience: "runtime"})
 	})))
 	defer server.Close()
-	factory := remote.NewFactory(remote.Config{BaseURL: server.URL, ServiceCredential: "real-service", HTTPClient: server.Client(), ContextHeaders: func(context.Context) http.Header {
-		return http.Header{"Traceparent": []string{"00-trace-span-01"}, "X-Domainry-Service-Credential": []string{"evil"}}
-	}})
-	if _, err := factory.Open(t.Context(), notificationsdk.ApplicationRef{WorkspaceID: "workspace", ApplicationKey: "runtime"}); err != nil {
+	factory := remote.NewFactory(remote.Config{BaseURL: server.URL, ServiceCredential: "real-service", HTTPClient: server.Client()})
+	traceID, _ := trace.TraceIDFromHex("4bf92f3577b34da6a3ce929d0e0e4736")
+	spanID, _ := trace.SpanIDFromHex("00f067aa0ba902b7")
+	ctx := trace.ContextWithSpanContext(t.Context(), trace.NewSpanContext(trace.SpanContextConfig{TraceID: traceID, SpanID: spanID, TraceFlags: trace.FlagsSampled}))
+	if _, err := factory.Open(ctx, notificationsdk.ApplicationRef{WorkspaceID: "workspace", ApplicationKey: "runtime"}); err != nil {
 		t.Fatal(err)
 	}
 }
