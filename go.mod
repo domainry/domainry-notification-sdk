@@ -5,7 +5,7 @@ go 1.26.0
 toolchain go1.26.6
 
 require (
-	github.com/domainry/domainry-foundation v0.2.0
+	github.com/domainry/domainry-foundation v0.2.4
 	github.com/domainry/domainry-identity-sdk v0.1.22
 	go.opentelemetry.io/otel v1.44.0
 	go.opentelemetry.io/otel/sdk v1.44.0
