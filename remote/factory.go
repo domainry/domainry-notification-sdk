@@ -160,7 +160,7 @@ func (b *binding) perform(parent context.Context, method, path string, authority
 		if decodeErr := json.NewDecoder(io.LimitReader(response.Body, 1<<20)).Decode(&envelope); decodeErr != nil || envelope.Code == "" {
 			return response.StatusCode, remoteError(response.StatusCode, "notification.remote_rejected", retryableStatus(response.StatusCode), decodeErr)
 		}
-		envelope.StatusCode = response.StatusCode
+		envelope.Class = notificationErrorClassFromHTTPStatus(response.StatusCode)
 		return response.StatusCode, &envelope
 	}
 	if output == nil || response.StatusCode == http.StatusNoContent {
@@ -195,7 +195,26 @@ func (b *binding) serviceToken(ctx context.Context, grant identitysdk.Applicatio
 }
 
 func remoteError(status int, code string, retryable bool, cause error) error {
-	return &notificationsdk.Error{StatusCode: status, Code: code, Retryable: retryable, Cause: cause}
+	return &notificationsdk.Error{Class: notificationErrorClassFromHTTPStatus(status), Code: code, Retryable: retryable, Cause: cause}
+}
+
+func notificationErrorClassFromHTTPStatus(status int) notificationsdk.ErrorClass {
+	switch status {
+	case http.StatusBadRequest, http.StatusRequestEntityTooLarge, http.StatusUnprocessableEntity, http.StatusMethodNotAllowed:
+		return notificationsdk.ErrorClassBadRequest
+	case http.StatusUnauthorized, http.StatusForbidden:
+		return notificationsdk.ErrorClassForbidden
+	case http.StatusNotFound:
+		return notificationsdk.ErrorClassNotFound
+	case http.StatusConflict, http.StatusPreconditionFailed, http.StatusLocked:
+		return notificationsdk.ErrorClassConflict
+	case http.StatusTooManyRequests:
+		return notificationsdk.ErrorClassRateLimited
+	case http.StatusBadGateway, http.StatusServiceUnavailable, http.StatusGatewayTimeout, http.StatusNotImplemented:
+		return notificationsdk.ErrorClassUnavailable
+	default:
+		return notificationsdk.ErrorClassInternal
+	}
 }
 
 var _ notificationsdk.Factory = (*Factory)(nil)

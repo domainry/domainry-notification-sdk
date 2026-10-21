@@ -11,7 +11,7 @@ import (
 // authorize only the exact Notification capability required by one route.
 func ServiceGrantForRequest(method, path string) (identitysdk.ApplicationServiceGrant, error) {
 	if method != http.MethodGet && method != http.MethodPost {
-		return identitysdk.ApplicationServiceGrant{}, &Error{StatusCode: http.StatusMethodNotAllowed, Code: "notification.method_not_allowed"}
+		return identitysdk.ApplicationServiceGrant{}, &Error{Class: ErrorClassBadRequest, Code: "notification.method_not_allowed"}
 	}
 	grant := identitysdk.ApplicationServiceGrant{}
 	switch path {
@@ -64,7 +64,7 @@ func ServiceGrantForRequest(method, path string) (identitysdk.ApplicationService
 	case "/notification/v1/system/migration:status", "/notification/v1/system/migration:freeze", "/notification/v1/system/migration:export", "/notification/v1/system/migration:import", "/notification/v1/system/migration:activate", "/notification/v1/system/migration:rollback":
 		grant = serviceGrant("notification_governance", "migrate")
 	default:
-		return identitysdk.ApplicationServiceGrant{}, &Error{StatusCode: http.StatusNotFound, Code: "notification.route_not_found"}
+		return identitysdk.ApplicationServiceGrant{}, &Error{Class: ErrorClassNotFound, Code: "notification.route_not_found"}
 	}
 	return grant, nil
 }

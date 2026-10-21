@@ -25,7 +25,7 @@ func TestApplicationRefRequiresExplicitApplicationScope(t *testing.T) {
 
 func TestErrorWireContractOmitsLocalState(t *testing.T) {
 	t.Parallel()
-	encoded, err := json.Marshal(&notificationsdk.Error{StatusCode: 503, Code: "notification.remote_unavailable", Message: "temporarily unavailable", Retryable: true, Cause: assertError("secret local cause")})
+	encoded, err := json.Marshal(&notificationsdk.Error{Class: notificationsdk.ErrorClassUnavailable, Code: "notification.remote_unavailable", Message: "temporarily unavailable", Retryable: true, Cause: assertError("secret local cause")})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/domainry/domainry-foundation/apperror"
 	"github.com/domainry/domainry-notification-sdk/contract"
 )
 
@@ -21,12 +22,24 @@ const (
 
 // Error is stable across in-process and Remote implementations. Cause is
 // local-only and is never serialized.
+type ErrorClass = apperror.ErrorKind
+
+const (
+	ErrorClassBadRequest  = apperror.KindBadRequest
+	ErrorClassForbidden   = apperror.KindForbidden
+	ErrorClassNotFound    = apperror.KindNotFound
+	ErrorClassConflict    = apperror.KindConflict
+	ErrorClassRateLimited = apperror.KindRateLimited
+	ErrorClassUnavailable = apperror.KindUnavailable
+	ErrorClassInternal    = apperror.KindInternal
+)
+
 type Error struct {
-	StatusCode int    `json:"-"`
-	Code       string `json:"code"`
-	Message    string `json:"message,omitempty"`
-	Retryable  bool   `json:"retryable,omitempty"`
-	Cause      error  `json:"-"`
+	Class     ErrorClass `json:"-"`
+	Code      string     `json:"code"`
+	Message   string     `json:"message,omitempty"`
+	Retryable bool       `json:"retryable,omitempty"`
+	Cause     error      `json:"-"`
 }
 
 func (e *Error) Error() string {
@@ -49,25 +62,10 @@ func (e *Error) ApplicationErrorKind() string {
 	if e == nil {
 		return ""
 	}
-	switch e.StatusCode {
-	case 400, 413, 422:
-		return "bad_request"
-	case 401, 403:
-		return "forbidden"
-	case 404:
-		return "not_found"
-	case 409, 412:
-		return "conflict"
-	case 429:
-		return "rate_limited"
-	case 502, 503, 504:
-		return "unavailable"
-	default:
-		if e.Retryable {
-			return "unavailable"
-		}
-		return "internal"
+	if e.Class == "" && e.Retryable {
+		return string(apperror.KindUnavailable)
 	}
+	return string(apperror.NormalizeKind(string(e.Class)))
 }
 
 func (e *Error) ErrorCode() string {
@@ -88,7 +86,7 @@ type ApplicationRef struct {
 
 func (r ApplicationRef) Validate() error {
 	if strings.TrimSpace(r.WorkspaceID) == "" || strings.TrimSpace(r.ApplicationKey) == "" {
-		return &Error{StatusCode: 400, Code: "notification.application_scope_invalid"}
+		return &Error{Class: ErrorClassBadRequest, Code: "notification.application_scope_invalid"}
 	}
 	return nil
 }
@@ -102,10 +100,10 @@ type Descriptor struct {
 
 func (d Descriptor) Validate() error {
 	if d.ProtocolVersion != CurrentProtocolVersion {
-		return &Error{StatusCode: 502, Code: "notification.protocol_version_unsupported", Message: fmt.Sprintf("got %q", d.ProtocolVersion)}
+		return &Error{Class: ErrorClassUnavailable, Code: "notification.protocol_version_unsupported", Message: fmt.Sprintf("got %q", d.ProtocolVersion)}
 	}
 	if d.Mode != DeploymentModeModule && d.Mode != DeploymentModeSaaS {
-		return &Error{StatusCode: 502, Code: "notification.deployment_mode_invalid"}
+		return &Error{Class: ErrorClassUnavailable, Code: "notification.deployment_mode_invalid"}
 	}
 	return nil
 }
@@ -221,7 +219,7 @@ type UserAuthority struct {
 
 func (a UserAuthority) Validate() error {
 	if strings.TrimSpace(a.AccessToken) == "" {
-		return &Error{StatusCode: 401, Code: "notification.user_authority_required"}
+		return &Error{Class: ErrorClassForbidden, Code: "notification.user_authority_required"}
 	}
 	return nil
 }

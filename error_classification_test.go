@@ -8,19 +8,19 @@ import (
 
 func TestErrorClassificationContract(t *testing.T) {
 	tests := []struct {
-		status int
-		kind   apperror.ErrorKind
-		code   string
+		class ErrorClass
+		kind  apperror.ErrorKind
+		code  string
 	}{
-		{400, apperror.KindBadRequest, "notification.validation_failed"},
-		{403, apperror.KindForbidden, "notification.permission_denied"},
-		{409, apperror.KindConflict, "notification.publication_fence_rejected"},
-		{503, apperror.KindUnavailable, "notification.database_unavailable"},
+		{ErrorClassBadRequest, apperror.KindBadRequest, "notification.validation_failed"},
+		{ErrorClassForbidden, apperror.KindForbidden, "notification.permission_denied"},
+		{ErrorClassConflict, apperror.KindConflict, "notification.publication_fence_rejected"},
+		{ErrorClassUnavailable, apperror.KindUnavailable, "notification.database_unavailable"},
 	}
 	for _, test := range tests {
-		err := &Error{StatusCode: test.status, Code: test.code}
+		err := &Error{Class: test.class, Code: test.code}
 		if apperror.KindOf(err) != test.kind || apperror.CodeOf(err) != test.code {
-			t.Fatalf("status=%d kind=%q code=%q", test.status, apperror.KindOf(err), apperror.CodeOf(err))
+			t.Fatalf("class=%q kind=%q code=%q", test.class, apperror.KindOf(err), apperror.CodeOf(err))
 		}
 	}
 }
