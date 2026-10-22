@@ -9,7 +9,7 @@ import (
 
 func validIntent() contract.NotificationIntent {
 	return contract.NotificationIntent{
-		ID: "event", WorkspaceID: "workspace", SourceEventID: "source-event", EventType: "report.completed",
+		WorkspaceID: "workspace", SourceEventID: "source-event", EventType: "report.completed",
 		RecipientUserIDs: []string{"user"}, OccurredAt: "2026-08-28T00:00:00.000000000Z",
 		SubjectType: "report", SubjectID: "report-1", SubjectVersion: "version-1",
 	}

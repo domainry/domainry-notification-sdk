@@ -76,7 +76,8 @@ type NotificationInboxSnapshot struct {
 // retry. Recipients are explicit user identities or the result of a trusted
 // resolver before the event crosses into this owner.
 type NotificationEvent struct {
-	ID                   string                               `json:"id"`
+	ID                   int64                                `json:"id"`
+	EventID              string                               `json:"event_id"`
 	WorkspaceID          string                               `json:"workspace_id"`
 	Source               string                               `json:"source"`
 	SourceEventID        string                               `json:"source_event_id"`
@@ -119,7 +120,6 @@ type NotificationEvent struct {
 // It deliberately stores only stable catalog/error identifiers and never the
 // event payload, rendered copy, recipients, trace data, or provider response.
 type NotificationEventFailure struct {
-	ID            string `json:"id"`
 	WorkspaceID   string `json:"workspace_id"`
 	EventID       string `json:"event_id"`
 	EventType     string `json:"event_type"`
@@ -158,7 +158,8 @@ type NotificationAlertGroup struct {
 // of one notification event. In-app materialization has its own lifecycle and
 // is never rolled back because an email or collaboration connector fails.
 type NotificationChannelPlan struct {
-	ID                       string         `json:"id"`
+	ID                       int64          `json:"id"`
+	DeliveryID               string         `json:"delivery_id"`
 	WorkspaceID              string         `json:"workspace_id"`
 	EventID                  string         `json:"event_id"`
 	Channel                  string         `json:"channel"`
@@ -191,7 +192,8 @@ type NotificationChannelPlan struct {
 }
 
 type NotificationInboxItem struct {
-	ID                  string                       `json:"id"`
+	ID                  int64                        `json:"id"`
+	ItemID              string                       `json:"item_id"`
 	WorkspaceID         string                       `json:"workspace_id"`
 	RecipientUserID     string                       `json:"recipient_user_id"`
 	EventID             string                       `json:"event_id"`
@@ -241,7 +243,8 @@ type NotificationInboxQuery struct {
 // owner's inbox. It never copies notifications and never grants authority to
 // mutate the owner's mailbox or business resource.
 type NotificationInboxDelegation struct {
-	ID             string `json:"id"`
+	ID             int64  `json:"id"`
+	DelegationID   string `json:"delegation_id"`
 	WorkspaceID    string `json:"workspace_id"`
 	OwnerUserID    string `json:"owner_user_id"`
 	DelegateUserID string `json:"delegate_user_id"`

@@ -26,7 +26,6 @@ type NotificationInboxEventTypeContent struct {
 // NotificationIntent is the only producer-facing contract. Producers emit
 // typed facts and never supply rendered copy, URLs, routes, or HTTP requests.
 type NotificationIntent struct {
-	ID                   string         `json:"id"`
 	WorkspaceID          string         `json:"workspace_id"`
 	SourceEventID        string         `json:"source_event_id"`
 	EventType            string         `json:"event_type"`

@@ -8,7 +8,7 @@ import (
 const RetentionArchiveOwnerNotification = "notification"
 
 type RetentionArchiveJob struct {
-	ID          string
+	JobID       string
 	WorkspaceID string
 	ArchivedAt  time.Time
 }

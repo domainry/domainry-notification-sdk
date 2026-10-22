@@ -5,8 +5,8 @@ go 1.26.0
 toolchain go1.26.6
 
 require (
-	github.com/domainry/domainry-foundation v0.2.10
-	github.com/domainry/domainry-identity-sdk v0.1.31
+	github.com/domainry/domainry-foundation v0.2.12
+	github.com/domainry/domainry-identity-sdk v0.1.32
 	go.opentelemetry.io/otel v1.44.0
 	go.opentelemetry.io/otel/sdk v1.44.0
 	go.opentelemetry.io/otel/trace v1.44.0
@@ -32,7 +32,7 @@ require (
 
 require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/domainry/domainry-orm v0.1.33
+	github.com/domainry/domainry-orm v0.1.34
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect

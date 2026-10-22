@@ -75,7 +75,7 @@ type NotificationRecipientPreference struct {
 }
 
 type NotificationDeliveryReservation struct {
-	ID, RecipientKey, TemplateKey, Channel, DedupeKey, CreatedAt string
+	ReservationKey, RecipientKey, TemplateKey, Channel, DedupeKey, CreatedAt string
 }
 
 type NotificationDeliveryEvaluationRequest struct {

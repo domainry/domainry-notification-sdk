@@ -45,7 +45,7 @@ func TestFactoryDiscoversSaaSAndBindsExactApplicationHeaders(t *testing.T) {
 			if request.Header.Get("Authorization") != "" {
 				t.Error("service publication unexpectedly carried user bearer authority")
 			}
-			_ = json.NewEncoder(response).Encode(map[string]any{"event": contract.NotificationEvent{ID: "event"}, "created": true})
+			_ = json.NewEncoder(response).Encode(map[string]any{"event": contract.NotificationEvent{EventID: "notevt_00000000000000000000000000000001"}, "created": true})
 		default:
 			http.NotFound(response, request)
 		}
@@ -56,9 +56,9 @@ func TestFactoryDiscoversSaaSAndBindsExactApplicationHeaders(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	intent := contract.NotificationIntent{ID: "event", WorkspaceID: "workspace", SourceEventID: "source", EventType: "report.completed", RecipientUserIDs: []string{"user"}, OccurredAt: "2026-08-28T00:00:00.000000000Z", SubjectType: "report", SubjectID: "report", SubjectVersion: "one"}
+	intent := contract.NotificationIntent{WorkspaceID: "workspace", SourceEventID: "source", EventType: "report.completed", RecipientUserIDs: []string{"user"}, OccurredAt: "2026-08-28T00:00:00.000000000Z", SubjectType: "report", SubjectID: "report", SubjectVersion: "one"}
 	event, created, err := binding.Publisher().PublishIntent(t.Context(), intent)
-	if err != nil || !created || event.ID != "event" {
+	if err != nil || !created || event.EventID != "notevt_00000000000000000000000000000001" {
 		t.Fatalf("publish result: event=%#v created=%t err=%v", event, created, err)
 	}
 }
@@ -73,7 +73,7 @@ func TestFactoryExchangesAndCachesIdentityServiceToken(t *testing.T) {
 		case "/notification/v1/descriptor":
 			_ = json.NewEncoder(response).Encode(notificationsdk.Descriptor{ProtocolVersion: notificationsdk.CurrentProtocolVersion, Mode: notificationsdk.DeploymentModeSaaS, Audience: "runtime"})
 		case "/notification/v1/events:publish":
-			_ = json.NewEncoder(response).Encode(map[string]any{"event": contract.NotificationEvent{ID: "event"}, "created": true})
+			_ = json.NewEncoder(response).Encode(map[string]any{"event": contract.NotificationEvent{EventID: "notevt_00000000000000000000000000000001"}, "created": true})
 		default:
 			http.NotFound(response, request)
 		}
@@ -83,7 +83,7 @@ func TestFactoryExchangesAndCachesIdentityServiceToken(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	intent := contract.NotificationIntent{ID: "event", WorkspaceID: "workspace", SourceEventID: "source", EventType: "report.completed", RecipientUserIDs: []string{"user"}, OccurredAt: "2026-08-28T00:00:00.000000000Z", SubjectType: "report", SubjectID: "report", SubjectVersion: "one"}
+	intent := contract.NotificationIntent{WorkspaceID: "workspace", SourceEventID: "source", EventType: "report.completed", RecipientUserIDs: []string{"user"}, OccurredAt: "2026-08-28T00:00:00.000000000Z", SubjectType: "report", SubjectID: "report", SubjectVersion: "one"}
 	if _, _, err := binding.Publisher().PublishIntent(t.Context(), intent); err != nil {
 		t.Fatal(err)
 	}
@@ -239,7 +239,7 @@ func TestRemoteRetriesStablePublicationButDoesNotReplayOrdinaryMutation(t *testi
 				_ = json.NewEncoder(response).Encode(notificationsdk.Error{Code: "notification.unavailable", Retryable: true})
 				return
 			}
-			_ = json.NewEncoder(response).Encode(map[string]any{"event": contract.NotificationEvent{ID: "event"}, "created": true})
+			_ = json.NewEncoder(response).Encode(map[string]any{"event": contract.NotificationEvent{EventID: "notevt_00000000000000000000000000000001"}, "created": true})
 		case "/notification/v1/inbox:set-read":
 			mutations++
 			response.WriteHeader(http.StatusServiceUnavailable)
@@ -252,7 +252,7 @@ func TestRemoteRetriesStablePublicationButDoesNotReplayOrdinaryMutation(t *testi
 	if err != nil {
 		t.Fatal(err)
 	}
-	intent := contract.NotificationIntent{ID: "event", WorkspaceID: "workspace", SourceEventID: "source", EventType: "report.completed", RecipientUserIDs: []string{"user"}, OccurredAt: "2026-08-28T00:00:00.000000000Z", SubjectType: "report", SubjectID: "report", SubjectVersion: "one"}
+	intent := contract.NotificationIntent{WorkspaceID: "workspace", SourceEventID: "source", EventType: "report.completed", RecipientUserIDs: []string{"user"}, OccurredAt: "2026-08-28T00:00:00.000000000Z", SubjectType: "report", SubjectID: "report", SubjectVersion: "one"}
 	if _, _, err := binding.Publisher().PublishIntent(t.Context(), intent); err != nil {
 		t.Fatal(err)
 	}
