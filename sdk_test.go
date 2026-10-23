@@ -41,6 +41,9 @@ func (e assertError) Error() string { return string(e) }
 
 func TestDescriptorRejectsUnknownProtocolAndMode(t *testing.T) {
 	t.Parallel()
+	if notificationsdk.CurrentProtocolVersion != "domainry-notification-protocol-v2" {
+		t.Fatalf("notification protocol=%q", notificationsdk.CurrentProtocolVersion)
+	}
 	if err := (notificationsdk.Descriptor{Mode: notificationsdk.DeploymentModeModule}).Validate(); err == nil {
 		t.Fatal("expected missing protocol to fail")
 	}

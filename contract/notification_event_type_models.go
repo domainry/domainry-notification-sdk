@@ -43,8 +43,6 @@ type NotificationIntent struct {
 	OccurredAt           string         `json:"occurred_at"`
 	Locale               string         `json:"locale,omitempty"`
 	Variables            map[string]any `json:"variables,omitempty"`
-	CorrelationID        string         `json:"correlation_id,omitempty"`
-	TraceID              string         `json:"trace_id,omitempty"`
 }
 
 type NotificationRule struct {
@@ -87,7 +85,7 @@ type NotificationGovernanceCatalog struct {
 
 // NotificationInboxAggregate contains only non-identifying operational
 // counters. It intentionally excludes recipients, rendered content, subjects,
-// variables, correlation IDs and trace IDs.
+// variables and tracing data.
 type NotificationInboxAggregate struct {
 	Key            string `json:"key"`
 	Items          int    `json:"items"`

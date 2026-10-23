@@ -16,8 +16,7 @@ type DeploymentMode string
 const (
 	DeploymentModeModule   DeploymentMode = "module"
 	DeploymentModeSaaS     DeploymentMode = "saas"
-	ProtocolVersionV1                     = "domainry-notification-protocol-v1"
-	CurrentProtocolVersion                = ProtocolVersionV1
+	CurrentProtocolVersion                = "domainry-notification-protocol-v2"
 )
 
 // Error is stable across in-process and Remote implementations. Cause is

@@ -95,8 +95,6 @@ type NotificationEvent struct {
 	AlertState           string                               `json:"alert_state,omitempty"`
 	ExpiresAt            string                               `json:"expires_at,omitempty"`
 	OccurredAt           string                               `json:"occurred_at"`
-	CorrelationID        string                               `json:"correlation_id,omitempty"`
-	TraceID              string                               `json:"trace_id,omitempty"`
 	Snapshot             NotificationInboxSnapshot            `json:"snapshot"`
 	LocalizedSnapshots   map[string]NotificationInboxSnapshot `json:"localized_snapshots,omitempty"`
 	ChannelPlans         []NotificationChannelPlan            `json:"channel_plans,omitempty"`
