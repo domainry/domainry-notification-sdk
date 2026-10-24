@@ -18,6 +18,13 @@ func TestValidateEventTypesContract(t *testing.T) {
 	if err := ValidateEventTypes([]NotificationEventType{valid}, []NotificationRule{{EventTypeKey: valid.Key, Channels: []NotificationRuleChannel{{Channel: "in_app"}}}}); err != nil {
 		t.Fatalf("valid catalog: %v", err)
 	}
+	nativeRules := []NotificationRule{{EventTypeKey: valid.Key, Channels: []NotificationRuleChannel{
+		{Channel: "native_push", TemplateKey: "workflow.task.assigned.fcm", ConnectorKey: "notification", ConnectionKey: "facility_fcm", Operation: "send_native"},
+		{Channel: "native_push", TemplateKey: "workflow.task.assigned.apns", ConnectorKey: "notification", ConnectionKey: "facility_apns", Operation: "send_native"},
+	}}}
+	if err := ValidateEventTypes([]NotificationEventType{valid}, nativeRules); err != nil {
+		t.Fatalf("valid native push routes: %v", err)
+	}
 	if err := ValidateEventTypes([]NotificationEventType{valid, valid}, nil); catalogErrorCode(err) != "backend.notification.event_type_duplicate" {
 		t.Fatalf("duplicate code=%q err=%v", catalogErrorCode(err), err)
 	}

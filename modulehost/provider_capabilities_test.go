@@ -11,8 +11,11 @@ func TestDefaultProviderCapabilitiesAreSortedAndComplete(t *testing.T) {
 		t.Fatalf("WhatsApp capability=%+v found=%v", value, found)
 	}
 	values := DefaultProviderCapabilities()
-	if len(values) != 12 {
+	if len(values) != 14 {
 		t.Fatalf("capability count=%d", len(values))
+	}
+	if value, found := DefaultProviderCapabilityFor("native_push", "fcm"); !found || value.SupportsHTML || value.SupportsMarkdown {
+		t.Fatalf("FCM capability=%+v found=%v", value, found)
 	}
 	for index := 1; index < len(values); index++ {
 		previous, current := values[index-1], values[index]

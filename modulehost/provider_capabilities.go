@@ -60,6 +60,8 @@ func (DefaultProviderTemplateValidator) ValidateProviderTemplate(channel, provid
 
 var defaultProviderCapabilities = map[string]contract.NotificationTemplateCapability{
 	"email/":                          {Channel: "email", SupportsHTML: true, SupportsFacts: true, SupportsURLActions: true, MaxFacts: 10, MaxActions: 5},
+	"native_push/apns":                {Channel: "native_push", Provider: "apns"},
+	"native_push/fcm":                 {Channel: "native_push", Provider: "fcm"},
 	"whatsapp/meta_cloud_api":         {Channel: "whatsapp", Provider: "meta_cloud_api", SupportsFacts: true, SupportsURLActions: true, SupportsProviderTemplate: true, MaxFacts: 10, MaxActions: 5},
 	"collaboration/feishu":            collaborationCapability("feishu", 5),
 	"collaboration/dingtalk":          collaborationCapability("dingtalk", 5),

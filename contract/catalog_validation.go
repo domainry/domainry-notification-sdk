@@ -55,7 +55,7 @@ func ValidateEventTypes(values []NotificationEventType, rules []NotificationRule
 		seenChannels := map[string]bool{}
 		for _, channel := range rule.Channels {
 			channelKey := strings.TrimSpace(channel.Channel)
-			channelIdentity := fmt.Sprintf("%s:%d", channelKey, channel.EscalationStep)
+			channelIdentity := fmt.Sprintf("%s:%s:%s:%d", channelKey, strings.TrimSpace(channel.TemplateKey), strings.TrimSpace(channel.ConnectionKey), channel.EscalationStep)
 			if seenChannels[channelIdentity] || channel.DelaySeconds < 0 || channel.EscalationStep < 0 || channel.DigestWindowSeconds < 0 || channel.DigestMaximumItems < 0 {
 				return invalidCatalog("backend.notification.rule_channel_duplicate", "event_type", key, "channel", channelKey)
 			}
@@ -75,7 +75,7 @@ func ValidateEventTypes(values []NotificationEventType, rules []NotificationRule
 				if strings.TrimSpace(channel.TemplateKey) != "" || strings.TrimSpace(channel.ConnectorKey) != "" || strings.TrimSpace(channel.Operation) != "" || channel.DelaySeconds != 0 || channel.EscalationStep != 0 || deliveryMode != "immediate" || channel.DigestWindowSeconds != 0 {
 					return invalidCatalog("backend.notification.rule_in_app_channel_invalid", "event_type", key)
 				}
-			case "email", "collaboration", "whatsapp":
+			case "email", "collaboration", "whatsapp", "native_push":
 				if !templateStableKeyPattern.MatchString(strings.TrimSpace(channel.TemplateKey)) || strings.TrimSpace(channel.ConnectorKey) == "" || strings.TrimSpace(channel.Operation) == "" {
 					return invalidCatalog("backend.notification.rule_external_channel_invalid", "event_type", key, "channel", channelKey)
 				}
